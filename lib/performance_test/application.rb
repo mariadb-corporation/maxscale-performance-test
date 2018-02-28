@@ -28,7 +28,8 @@ class Application
         config_path = config.server_config
       end
       machine_config = MachineConfig.new(config_path)
-      configure_machines(machine_config)
+      configure_machines(machine_config) unless config.already_configured
+      run_test(config, machine_config)
     rescue StandardError => error
       @log.error(error.message)
     end
@@ -82,7 +83,22 @@ class Application
   def run_command(command)
     @log.info("Running command '#{command}'")
     output, result = Open3.capture2e(command)
-    @log.debug("Command output:\n #{output}")
+    @log.debug("Command output:\n#{output}")
     result
+  end
+
+  # Run the test tool and provide it with the configuration.
+  #
+  # @param configuration [Configuration] configuration to use.
+  # @param machine_config [MachineConfig] information about machines.
+  def run_test(configuration, machine_config)
+    if configuration.test.empty?
+      @log.error('You did not specify test, doing nothing')
+      return
+    end
+    @log.info("Running the test '#{configuration.test}'")
+    output, result = Open3.capture2e(machine_config.environment_hash, configuration.test)
+    @log.info("Test command output:\n#{output}")
+    @log.info("Test was success: #{result.success?}")
   end
 end

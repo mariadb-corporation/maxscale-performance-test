@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'iniparse'
+require 'pry'
 
 # Class provides access to the configuration of machines
 class MachineConfig
@@ -10,6 +11,15 @@ class MachineConfig
   def initialize(config)
     document = IniParse.parse(File.read(config))
     @configs = parse_document(document)
+  end
+
+  # Provide configuration in the form of the configuration hash
+  def environment_hash
+    @configs.each_with_object({}) do |(name, config), result|
+      config.each_pair do |key, value|
+        result["#{name}_#{key}"] = value
+      end
+    end
   end
 
   private

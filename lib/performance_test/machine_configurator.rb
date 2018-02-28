@@ -42,7 +42,7 @@ class MachineConfigurator
     output = ''
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
-        data.split("\n").reject(&:empty?).each { |line| puts "ssh: #{line}" }
+        data.split("\n").reject(&:empty?).each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |ch, _, data|
@@ -65,7 +65,7 @@ class MachineConfigurator
     output = ''
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
-        data.split("\n").reject(&:empty?).each { |line| puts "ssh: #{line}" }
+        data.split("\n").reject(&:empty?).each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |_, _, data|

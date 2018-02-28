@@ -8,7 +8,8 @@ class Configuration
   attr_accessor :node_count, :galera_count, :backend_box, :memory_size,
                 :product, :version, :cnf_path, :maxscale_box,
                 :galera_version, :mdbci_path, :mdbci_vm_path,
-                :verbose, :server_config, :keep_servers
+                :verbose, :server_config, :keep_servers, :test,
+                :already_configured
   def initialize
     @node_count = 1
     @galera_count = 0
@@ -24,6 +25,8 @@ class Configuration
     @verbose = false
     @server_config = ''
     @keep_servers = false
+    @test = ''
+    @already_configured = false
   end
 
   def to_s
@@ -42,6 +45,8 @@ class Configuration
     Verbose: #{@verbose}
     Server configuration: #{@server_config}
     Keep servers: #{@keep_servers}
+    Test application: #{@test}
+    Already configured: #{@already_configured}
     DOC
   end
 
@@ -120,6 +125,14 @@ class Configuration
 
       opts.on('--keep-servers=YES', FalseClass, 'Should we destroy the MDBCI machines or not when completed') do |keep|
         configuration.keep_servers = keep
+      end
+
+      opts.on('--test=PATH', 'Path to the test that should be executed') do |path|
+        configuration.test = File.expand_path(path)
+      end
+
+      opts.on('--already-configured=YES', FalseClass, 'If set, the machines will not be configured') do |configured|
+        configuration.already_configured = configured
       end
 
       opts.on('-h', '--help', 'Print help and exit') do
