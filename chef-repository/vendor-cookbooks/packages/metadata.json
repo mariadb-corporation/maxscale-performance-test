@@ -1,0 +1,43 @@
+{
+  "name": "packages",
+  "description": "Installs packages and configure package management systems",
+  "long_description": "packages Cookbook\n=============\nCookbook for install additional packages for MariaDB, MariaDB-Maxscale, Galera and other software.",
+  "maintainer": "OSLL",
+  "maintainer_email": "kirill.yudenok@gmail.com",
+  "license": "All rights reserved",
+  "platforms": {
+  },
+  "dependencies": {
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+    "install": "Installs all required packages",
+    "configure_apt": "Configures the apt to allow HTTPS-based repositories"
+  },
+  "version": "0.1.1",
+  "source_url": "",
+  "issues_url": "",
+  "privacy": false,
+  "chef_versions": [
+
+  ],
+  "ohai_versions": [
+
+  ],
+  "gems": [
+
+  ]
+}

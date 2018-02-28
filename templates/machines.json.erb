@@ -1,0 +1,26 @@
+{
+  <% node_count.times do |number| %>
+  "node_00<%= number %>" :
+  {
+    "hostname" : "node00<%= number %>",
+    "box" : "<%= backend_box %>",
+    "memory_size" : "<%= memory_size %>"
+  },
+  <% end %>
+
+  <% galera_count.times do |number| %>
+  "galera_00<%= number %>" :
+  {
+    "hostname" : "galera00<%= number %>",
+    "box" : "<%= backend_box %>",
+    "memory_size" : "<%= memory_size %>"
+  },
+  <% end %>
+
+  "maxscale" :
+  {
+    "hostname" : "maxscale",
+    "box" : "<%= maxscale_box %>",
+    "memory_size" : "<%= memory_size %>"
+  }
+}

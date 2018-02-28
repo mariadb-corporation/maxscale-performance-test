@@ -1,0 +1,7 @@
+{
+  "name": "mariadb-host",
+  "description": "Install mariadb-host role on the server",
+  "run_list": [
+    "role[mariadb-host]"
+  ]
+}

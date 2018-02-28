@@ -1,0 +1,54 @@
+{
+  "name": "mariadb",
+  "description": "MariaDB coockbook",
+  "long_description": "",
+  "maintainer": "MariaDB, Inc.",
+  "maintainer_email": "Andrey.Kuznetsov@mariadb.com",
+  "license": "Apache 2.0",
+  "platforms": {
+    "redhat": ">= 0.0.0",
+    "centos": ">= 0.0.0",
+    "fedora": ">= 0.0.0",
+    "debian": ">= 0.0.0",
+    "ubuntu": ">= 0.0.0",
+    "suse": ">= 0.0.0"
+  },
+  "dependencies": {
+    "ntp": ">= 0.0.0",
+    "packages": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+    "develop": "Prepares environment to build MariaDB",
+    "install": "Installs Enterprise edition",
+    "uninstall": "Uninstalls any edition",
+    "purge": "Uninstalls any edition and remove all data",
+    "start": "Creates new instance of service and starts it"
+  },
+  "version": "0.0.2",
+  "source_url": "",
+  "issues_url": "",
+  "privacy": false,
+  "chef_versions": [
+
+  ],
+  "ohai_versions": [
+
+  ],
+  "gems": [
+
+  ]
+}

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# This script performs the system stress testing of the max scale system.
+# Initial implementation will use wirtual machines provided by the MDBCI.
+# Then the application will use existing virtual machines.
+
+require_relative '../lib/performance_test'
+
+if $PROGRAM_NAME == __FILE__
+  app = Application.new
+  app.run
+end

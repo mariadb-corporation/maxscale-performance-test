@@ -1,0 +1,12 @@
+source 'https://supermarket.chef.io'
+
+group :integration do
+  cookbook 'apt'
+  cookbook 'freebsd'
+  cookbook 'ips-omniti'
+  cookbook 'selinux'
+end
+
+cookbook 'packages', path: '../packages'
+
+metadata

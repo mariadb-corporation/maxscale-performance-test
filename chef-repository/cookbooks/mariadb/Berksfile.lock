@@ -1,0 +1,23 @@
+DEPENDENCIES
+  apt
+  freebsd
+  ips-omniti
+  mariadb
+    path: .
+    metadata: true
+  packages
+    path: ../packages
+  selinux
+
+GRAPH
+  apt (6.1.4)
+  freebsd (1.0.2)
+  ips (0.1.0)
+  ips-omniti (0.0.2)
+    ips (>= 0.0.0)
+  mariadb (0.0.2)
+    ntp (>= 0.0.0)
+    packages (>= 0.0.0)
+  ntp (3.5.6)
+  packages (0.1.1)
+  selinux (2.1.0)

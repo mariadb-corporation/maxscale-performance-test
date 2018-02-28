@@ -1,0 +1,30 @@
+{
+  "name": "ips-omniti",
+  "version": "0.0.2",
+  "description": "A fabulous new cookbook",
+  "long_description": "",
+  "maintainer": "Chef Software, Inc.",
+  "maintainer_email": "cookbooks@getchef.com",
+  "license": "Apache v2",
+  "platforms": {
+  },
+  "dependencies": {
+    "ips": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+  }
+}

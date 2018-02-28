@@ -1,0 +1,7 @@
+{
+  "name": "maxscale-host",
+  "description": "Install maxscale-host role on the server",
+  "run_list": [
+    "role[maxscale-host]"
+  ]
+}

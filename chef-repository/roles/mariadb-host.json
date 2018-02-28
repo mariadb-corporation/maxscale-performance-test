@@ -1,0 +1,9 @@
+{
+  "name": "mariadb-host",
+  "description": "A server with the mariadb server installed",
+  "json_class": "Chef::Role",
+  "chef_type": "role",
+  "run_list": [
+    "recipe[mariadb::setup_multi_server]"
+  ]
+}
