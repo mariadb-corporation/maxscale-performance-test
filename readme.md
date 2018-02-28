@@ -15,16 +15,25 @@ Currently the tool supports the following arguments:
 - `keep-servers` sets the tool to keep VMs created with MDBCI intact after performing the configuration and testing. By default is `false`.
 - `server-config` allows to specify configuration of existing servers to configure them and not to use MDBCI to create machines.
 - `verbose` options allows to provide more data to the standard output.
+- `already-configured` option allows to skip configuration of virtual machines if they are already configured.
+- `test` specifies the test application that should be run after the machines are brought up. Network configuration is passed to the application via environment variables.
 
 If you want to use AWS to run tests, then use the following command:
 
 ```
-./bin/performance_test --backend-box=ubuntu_xenial_aws
+./bin/performance_test --backend-box=ubuntu_xenial_aws --test tests/sample-test.rb
 ```
 
-If you want to use existing virtual machines, then use the following command
+If you want to use existing virtual machines, then use the following command:
+
 ```
-./bin/performance_test --server-config=~/vms/some_machine_network_config
+./bin/performance_test --server-config=~/vms/some_machine_network_config --test tests/sample-test.rb
+```
+
+If you want to just launch test application for the already created and configured virtual machines use the following command:
+
+```
+./bin/performance_test --server-config=~/vms/some_machine_network_config --alreay-configured=true --test tests/sample-test.rb
 ```
 
 ## Installation procedure
@@ -46,3 +55,8 @@ sudo apt install ruby ruby-net-ssh ruby-net-scp ruby-iniparse
 The tool uses the [chef](https://www.chef.io/chef/) to configure machines into a desired state. The configuration is done in `chef-solo` mode, no installation of the chef on the host system is required. The installation of the [Chef Development Kit](https://downloads.chef.io/chefdk) is only required for the development of the cookbooks and their vendoring.
 
 Repository also includes the dependent cookbooks to reduce the burden of running and configuring the tool. The support script `chef-repository/vendor-cookbooks.rb` performs vendoring of all cookbooks residing in the `chef-repository/cookbook` directory. It should be run every time any cookbook is changed.
+
+## Known issues
+
+* The mariadb configuration can be performed only once. If it is performed several times, then mariadb_multi can not start the application.
+* The result of running MDBCI appears only after the tool has finished it job.
