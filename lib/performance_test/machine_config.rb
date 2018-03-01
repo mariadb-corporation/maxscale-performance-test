@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'iniparse'
-require 'pry'
 
 # Class provides access to the configuration of machines
 class MachineConfig

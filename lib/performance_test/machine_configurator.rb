@@ -3,7 +3,6 @@
 require 'io/console'
 require 'net/ssh'
 require 'net/scp'
-require 'pry'
 
 # Class allows to configure a specified machine using the chef-solo,
 # MDBCI coockbooks and roles.
