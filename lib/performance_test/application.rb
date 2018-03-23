@@ -87,13 +87,12 @@ class Application
   # @param configuration [Configuration] configuration to use.
   # @param machine_config [MachineConfig] information about machines.
   def run_test(configuration, machine_config)
-    if configuration.test.empty?
+    if configuration.test_app.empty?
       @log.error('You did not specify test, doing nothing')
       return
     end
-    @log.info("Running the test '#{configuration.test}'")
-    output, result = Open3.capture2e(machine_config.environment_hash, configuration.test)
-    @log.info("Test command output:\n#{output}")
-    @log.info("Test was success: #{result.success?}")
+    @log.info("Running the test '#{configuration.test_app}'")
+    result = run_command_and_log(configuration.test_app, false, {}, machine_config.environment_hash)
+    @log.info("Test was success: #{result[:value].success?}")
   end
 end
