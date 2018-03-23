@@ -10,4 +10,5 @@ module PerformanceTest
   require_relative 'performance_test/template_generator'
   require_relative 'performance_test/machine_configurator'
   require_relative 'performance_test/machine_config'
+  require_relative 'performance_test/shell_commands'
 end

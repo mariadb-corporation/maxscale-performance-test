@@ -3,8 +3,13 @@
 require 'logger'
 require 'open3'
 
+require_relative 'shell_commands'
 # The starting point and controll class for all the application logic
 class Application
+  attr_reader :log
+
+  include ShellCommands
+
   def initialize
     @log = Logger.new(STDOUT)
     @log.level = Logger::INFO
@@ -51,10 +56,10 @@ class Application
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
     TemplateGenerator.generate('machines.json.erb', mdbci_template.to_s, config)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
-    result = run_command("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
-    raise 'Could not create MDBCI configuration' unless result.success?
+    result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
+    raise 'Could not create MDBCI configuration' unless result[:value].success?
     @log.info('Creating VMs with MDBCI')
-    run_command("#{config.mdbci_tool} up #{@mdbci_config}")
+    run_command_and_log("#{config.mdbci_tool} up #{@mdbci_config}")
   end
 
   # Destroy MDBCI virtual machines
@@ -62,7 +67,7 @@ class Application
   # @param config [Configuration] configuration to use during destroy.
   def destroy_vm(config)
     @log.info('Destroying VMs created with MDBCI')
-    run_command("#{config.mdbci_tool} destroy #{@mdbci_config}")
+    run_command_and_log("#{config.mdbci_tool} destroy #{@mdbci_config}")
   end
 
   # Configure all machines with their respected role
@@ -75,16 +80,6 @@ class Application
     mariadb = machine_config.configs['node_000']
     configurator.configure(maxscale['network'], maxscale['whoami'], maxscale['keyfile'], 'maxscale-host.json')
     configurator.configure(mariadb['network'], mariadb['whoami'], mariadb['keyfile'], 'mariadb-host.json')
-  end
-
-  # Run and log command and it's results
-  #
-  # @param command [String] command to execute
-  def run_command(command)
-    @log.info("Running command '#{command}'")
-    output, result = Open3.capture2e(command)
-    @log.debug("Command output:\n#{output}")
-    result
   end
 
   # Run the test tool and provide it with the configuration.
