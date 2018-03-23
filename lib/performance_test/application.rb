@@ -23,10 +23,9 @@ class Application
   # rubocop:disable Metrics/MethodLength
   def run
     @log.info('Starting the system test')
-    config = Configuration.parse_parameters(@log)
-    @log.level = Logger::DEBUG if config.verbose
+    config = read_configuration
     begin
-      if config.server_config.empty?
+      if config.create_vms?
         setup_vm(config)
         config_path = "#{@mdbci_config}_network_config"
       else
@@ -38,11 +37,20 @@ class Application
     rescue StandardError => error
       @log.error(error.message)
     end
-    destroy_vm(config) if config.server_config.empty? && !config.keep_servers
+    destroy_vm(config) if config.create_vms? && !config.keep_servers
   end
   # rubocop:enable Metrics/MethodLength
 
   private
+
+  # Parse configuration parameters and configure logger
+  # @return [Configuration] read configuration
+  def read_configuration
+    config = Configuration.parse_parameters(@log)
+    exit 1 unless config.correct?
+    @log.level = Logger::DEBUG if config.verbose
+    config
+  end
 
   # Create virtual machines using the MDBCI and provided configuration.
   #
@@ -54,7 +62,7 @@ class Application
     @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
     mdbci_template = "#{@mdbci_config}.json"
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
-    TemplateGenerator.generate('machines.json.erb', mdbci_template.to_s, config)
+    TemplateGenerator.generate('mdbci-config/machines.json.erb', mdbci_template.to_s, config)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
     result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
     raise 'Could not create MDBCI configuration' unless result[:value].success?
