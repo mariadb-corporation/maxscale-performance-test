@@ -164,6 +164,6 @@ class Configuration
   def check_file(file_name, error_message)
     return true if File.exist?(file_name)
     @logger.error(error_message)
-    return false
+    false
   end
 end

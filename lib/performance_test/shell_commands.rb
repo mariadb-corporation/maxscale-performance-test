@@ -46,7 +46,6 @@ module ShellCommands
   # rubocop:enable Metrics/BlockLength
   # rubocop:enable Metrics/MethodLength
 
-
   # Execute the command, log stdout and stderr.
   #
   # @param command [String] command to run
