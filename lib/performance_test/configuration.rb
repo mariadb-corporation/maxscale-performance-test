@@ -5,21 +5,15 @@ require 'optparse'
 # This class captures the configuration for the tool.
 # Configuration includes the information about the tooling.
 class Configuration
-  attr_accessor :node_count, :galera_count, :backend_box, :memory_size,
-                :product, :version, :cnf_path, :maxscale_box,
-                :galera_version, :mdbci_path, :mdbci_vm_path,
-                :verbose, :server_config, :keep_servers, :test,
-                :already_configured
+  attr_accessor :backend_box, :memory_size, :version, :maxscale_box,
+                :mdbci_path, :mdbci_vm_path, :verbose, :server_config,
+                :keep_servers, :test, :already_configured
   def initialize
-    @node_count = 1
-    @galera_count = 0
     @backend_box = 'ubuntu_xenial_libvirt'
     @memory_size = 2048
     @product = 'mariadb'
     @version = '10.2'
-    @galera_version = @version
     @maxscale_box = @backend_box
-    @cnf_path = File.expand_path('../BUILD/mdbci/cnf')
     @mdbci_path = File.expand_path('~/mdbci')
     @mdbci_vm_path = File.expand_path('~/vms')
     @verbose = false
@@ -31,17 +25,11 @@ class Configuration
 
   def to_s
     <<-DOC
-    Node boxes count: #{@node_count}
-    Galera boxes count: #{@galera_count}
-    Backend box: #{@backend_box}
+    Backend MDBCI box: #{@backend_box}
     Memory size: #{@memory_size}
-    Product: #{@product}
-    Product version: #{@version}
-    Galera version: #{@galera_version}
-    Maxscale box: #{@maxscale_box}
-    Config path: #{@cnf_path}
+    Maxscale MDBCI box: #{@maxscale_box}
     MDBCI path: #{@mdbci_path}
-    MDBCI VM path: #{@mdbci_vm_path}
+    MDBCI VM configuration path: #{@mdbci_vm_path}
     Verbose: #{@verbose}
     Server configuration: #{@server_config}
     Keep servers: #{@keep_servers}
@@ -66,16 +54,6 @@ class Configuration
     logger.info('Parsing command-line arguments')
     configuration = Configuration.new
     parser = OptionParser.new do |opts|
-      opts.on('--node-count=COUNT', Integer, 'Number of nodes to setup') do |count|
-        configuration.node_count = count.to_i
-        raise ArgumentError, 'Node number must be positive' if configuration.node_count.negative?
-      end
-
-      opts.on('--galera-count=COUNT', Integer, 'Number of galera nodes to setup') do |count|
-        configuration.galera_count = count.to_i
-        raise ArgumentError, 'Galera nodes counter must be positive' if configuration.galera_count.negative?
-      end
-
       opts.on('--backend-box=BOX', 'Name of the backend and maxscale box to use') do |box|
         configuration.backend_box = box
         configuration.maxscale_box = box
@@ -86,32 +64,15 @@ class Configuration
         raise ArgumentError, 'Memory size must be positive integer' if configuration.memory_size <= 0
       end
 
-      opts.on('--product=NAME', 'Name of the product to install') do |product|
-        configuration.product = product
-      end
-
-      opts.on('--product-version=VERSION', 'Version of the product to install') do |version|
-        configuration.version = version
-        configuration.galera_version = version
-      end
-
-      opts.on('--galera-version=VERSION', 'Version of the galera to install') do |version|
-        configuration.galera_version = version
-      end
-
       opts.on('--maxscale-box=BOX', 'Box to install for maxscale') do |box|
         configuration.maxscale_box = box
-      end
-
-      opts.on('--cnf-path=PATH', 'Path to the directory containing') do |path|
-        configuration.cnf_path = File.expand_path(path)
       end
 
       opts.on('--mdbci-path=PATH', 'Path to the MDBCI directory') do |path|
         configuration.mdbci_path = File.expand_path(path)
       end
 
-      opts.on('--mdbci-vm-path=PATH', 'Path to the VM directory for MDBCI directory') do |path|
+      opts.on('--mdbci-vm-path=PATH', 'Directory where MDBCI configuration should be stored') do |path|
         configuration.mdbci_vm_path = File.expand_path(path)
       end
 
@@ -123,7 +84,7 @@ class Configuration
         configuration.server_config = File.expand_path(path)
       end
 
-      opts.on('--keep-servers=YES', FalseClass, 'Should we destroy the MDBCI machines or not when completed') do |keep|
+      opts.on('--keep-servers', TrueClass, 'Should we destroy the MDBCI machines or not when completed') do |keep|
         configuration.keep_servers = keep
       end
 
