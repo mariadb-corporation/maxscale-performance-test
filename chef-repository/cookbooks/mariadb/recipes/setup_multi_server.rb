@@ -1,8 +1,8 @@
 include_recipe 'mariadb::install_community'
 
-# Transfer configuration file
-cookbook_file '/etc/mysql/multiple_servers.cnf' do
-  source 'multiple_servers.cnf'
+# Create configuration file
+template '/etc/mysql/multiple_servers.cnf' do
+  source 'multiple_servers.cnf.erb'
   owner 'root'
   group 'root'
   mode '0644'
@@ -10,7 +10,7 @@ cookbook_file '/etc/mysql/multiple_servers.cnf' do
 end
 
 # Open ports for these servers and save configuration
-(1..2).each do |server|
+1.upto(node['mariadb']['servers']) do |server|
   port = 3300 + server
   execute "Openning port #{port} for MultipleServers" do
     command "iptables -I INPUT -p tcp -m tcp --dport #{port} -j ACCEPT"
@@ -85,7 +85,7 @@ directory '/data/mysql' do
 end
 
 # Create databases for all the servers
-(1..2).each do |server|
+1.upto(node['mariadb']['servers']) do |server|
   execute "Create databases for #{server} mysql server" do
     command "mysql_install_db --defaults-file=/etc/mysql/multiple_servers.cnf --user=mysql --datadir=/data/mysql/mysql#{server}"
   end
@@ -116,7 +116,7 @@ cookbook_file '/tmp/configure_database.sql' do
 end
 
 # Apply configuration to all the mysql instances
-(1..2).each do |server|
+1.upto(node['mariadb']['servers']) do |server|
   execute "Configure #{server} mysql server" do
     command "mysql --socket=/var/run/mysqld/mysqld#{server}.sock < /tmp/configure_database.sql"
   end

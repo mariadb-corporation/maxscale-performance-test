@@ -1,0 +1,7 @@
+.idea/**
+*.pem
+aws-config.yml
+.kitchen
+*~
+#*#
+vms/

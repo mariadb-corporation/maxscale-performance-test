@@ -1,0 +1,16 @@
+[server]
+
+<% 1.upto(node['mariadb']['servers']) do |server|%>
+# Configuration for <%= server %>
+[mysqld<%= server %>]
+log-bin           = mar-bin
+binlog-format     = row
+slave-skip-errors = all
+server_id         = <%= server %>
+user              = mysql
+pid-file          = /var/run/mysqld/mysqld<%= server %>.pid
+socket            = /var/run/mysqld/mysqld<%= server %>.sock
+port              = 330<%= server %>
+bind-address      = 0.0.0.0
+datadir           = /data/mysql/mysql<%= server %>
+<% end %>
