@@ -2,6 +2,7 @@
 
 require 'logger'
 require 'open3'
+require 'tmpdir'
 
 require_relative 'shell_commands'
 # The starting point and controll class for all the application logic
@@ -11,7 +12,8 @@ class Application
   include ShellCommands
 
   def initialize
-    @log = Logger.new(STDOUT)
+    $stdout.sync = true
+    @log = Logger.new($stdout)
     @log.level = Logger::INFO
     @log.progname = File.basename($PROGRAM_NAME)
     @log.formatter = lambda do |severity, datetime, progname, msg|
@@ -32,7 +34,7 @@ class Application
         config_path = config.server_config
       end
       machine_config = MachineConfig.new(config_path)
-      configure_machines(machine_config) unless config.already_configured
+      configure_machines(machine_config, config) unless config.already_configured
       run_test(config, machine_config)
     rescue StandardError => error
       @log.error(error.message)
@@ -80,14 +82,28 @@ class Application
 
   # Configure all machines with their respected role
   #
-  # @param config [MachineConfig] information about network configuration of machines
-  def configure_machines(machine_config)
+  # @param machine_config [MachineConfig] information about network configuration of machines
+  # @param config [Configuration] confuguration to use during machine configuration
+  def configure_machines(machine_config, config)
     @log.info('Configuring machines')
     configurator = MachineConfigurator.new(@log)
-    maxscale = machine_config.configs['maxscale']
+    configure_maxscale(machine_config.configs['maxscale'], configurator, config)
     mariadb = machine_config.configs['node_000']
-    configurator.configure(maxscale['network'], maxscale['whoami'], maxscale['keyfile'], 'maxscale-host.json')
     configurator.configure(mariadb['network'], mariadb['whoami'], mariadb['keyfile'], 'mariadb-host.json')
+  end
+
+  # Configure maxscale according to the configuration
+  # @param machine [Hash] parameters of machine to connect to.
+  # @param configurator [MachineConfigurator] reference to the configurator.
+  # @param config [Configuration] configuration of the tool.
+  def configure_maxscale(machine, configurator, config)
+    @log.info('Configuring maxscale machine')
+    Dir.mktmpdir('performance-test') do |dir|
+      maxscale_role = "#{dir}/maxscale-host.json"
+      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, config)
+      configurator.configure(machine['network'], machine['whoami'], machine['keyfile'], 'maxscale-host.json',
+                            [[maxscale_role, 'roles/maxscale-host.json']])
+    end
   end
 
   # Run the test tool and provide it with the configuration.

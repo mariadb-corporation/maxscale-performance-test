@@ -13,12 +13,15 @@ class MachineConfigurator
   end
 
   # rubocop:disable Metrics/ParameterLists
-  def configure(address, username, key, config_name, sudo_password = '', chef_version = '13.8.0')
+  # Upload chef scripts onto the machine and configure it using specified role. The method is able to transfer
+  # extra files into the provision directory making runtime configuration of Chef scripts possible.
+  # @param extra_files [Array<Array<String>>] pairs of source and target paths.
+  def configure(address, username, key, config_name, extra_files = [], sudo_password = '', chef_version = '13.8.0')
     @log.info("Configuring machine #{address} with #{config_name}")
     within_ssh_session(address, username, key) do |connection|
       install_chef_on_server(connection, sudo_password, chef_version)
       remote_dir = '/tmp/provision'
-      copy_chef_files(connection, remote_dir, sudo_password)
+      copy_chef_files(connection, remote_dir, sudo_password, extra_files)
       run_chef_solo(config_name, connection, remote_dir, sudo_password)
       sudo_exec(connection, sudo_password, "rm -rf #{remote_dir}")
     end
@@ -41,7 +44,9 @@ class MachineConfigurator
     output = ''
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
-        data.split("\n").reject(&:empty?).each { |line| @log.debug("ssh: #{line}") }
+        data.split("\n").map(&:chomp)
+          .select { |line| line =~ /\p{Graph}+$/ }
+          .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |ch, _, data|
@@ -64,7 +69,9 @@ class MachineConfigurator
     output = ''
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
-        data.split("\n").reject(&:empty?).each { |line| @log.debug("ssh: #{line}") }
+        data.split("\n").map(&:chomp)
+          .select { |line| line =~ /\p{Graph}+/ }
+          .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |_, _, data|
@@ -88,15 +95,16 @@ class MachineConfigurator
     ssh_exec(connection, 'rm install.sh')
   end
 
-  def copy_chef_files(connection, remote_dir, sudo_password)
+  def copy_chef_files(connection, remote_dir, sudo_password, extra_files)
     @log.info('Copying chef files to the server.')
     sudo_exec(connection, sudo_password, "rm -rf #{remote_dir}")
     ssh_exec(connection, "mkdir -p #{remote_dir}")
-    %w[configs vendor-cookbooks roles solo.rb].each do |target|
-      full_path = "#{@root_path}/#{target}"
-      next unless File.exist?(full_path)
-      @log.debug("Transferring #{target}")
-      connection.scp.upload!(full_path, "#{remote_dir}/#{target}", recursive: true)
+    %w[configs vendor-cookbooks roles solo.rb]
+      .map { |name| ["#{@root_path}/#{name}", name] }
+      .select { |path, name| File.exist?(path) }
+      .concat(extra_files)
+      .each do |source, target|
+      connection.scp.upload!(source, "#{remote_dir}/#{target}", recursive: true)
     end
   end
 
