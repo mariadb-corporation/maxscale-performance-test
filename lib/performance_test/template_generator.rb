@@ -8,11 +8,11 @@ class TemplateGenerator
   #
   # @param template_name [String] name of the template to use.
   # @param target_name [String] path to the file to be generated.
-  # @param configuration [Configuration] parameters to use during the creation.
-  def self.generate(template_name, target_name, configuration)
+  # @param contex [Binding] scope to use during creation.
+  def self.generate(template_name, target_name, context)
     template_text = File.read("#{PerformanceTest::TEMPLATES_DIRECTORY}/#{template_name}")
     template = ERB.new(template_text)
-    result = template.result(configuration.internal_binding)
+    result = template.result(context)
     File.open(target_name, 'w') do |file|
       file.write(result)
     end

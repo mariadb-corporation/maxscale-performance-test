@@ -3,6 +3,7 @@
 require 'logger'
 require 'open3'
 require 'tmpdir'
+require 'json'
 
 require_relative 'shell_commands'
 # The starting point and controll class for all the application logic
@@ -64,7 +65,7 @@ class Application
     @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
     mdbci_template = "#{@mdbci_config}.json"
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
-    TemplateGenerator.generate('mdbci-config/machines.json.erb', mdbci_template.to_s, config)
+    TemplateGenerator.generate('mdbci-config/machines.json.erb', mdbci_template.to_s, config.internal_binding)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
     result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
     raise 'Could not create MDBCI configuration' unless result[:value].success?
@@ -88,8 +89,7 @@ class Application
     @log.info('Configuring machines')
     configurator = MachineConfigurator.new(@log)
     configure_maxscale(machine_config.configs['maxscale'], configurator, config)
-    mariadb = machine_config.configs['node_000']
-    configurator.configure(mariadb['network'], mariadb['whoami'], mariadb['keyfile'], 'mariadb-host.json')
+    configure_mariadb(machine_config.configs['node_000'], configurator, config)
   end
 
   # Configure maxscale according to the configuration
@@ -100,9 +100,28 @@ class Application
     @log.info('Configuring maxscale machine')
     Dir.mktmpdir('performance-test') do |dir|
       maxscale_role = "#{dir}/maxscale-host.json"
-      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, config)
+      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, config.internal_binding)
       configurator.configure(machine['network'], machine['whoami'], machine['keyfile'], 'maxscale-host.json',
                             [[maxscale_role, 'roles/maxscale-host.json']])
+    end
+  end
+
+  # Configure machine as mariadb using passed parameters.
+  # @param machine [Hash] parameters of machine to connect to.
+  # @param configurator [MachineConfigurator] reference to the configurator.
+  # @param config [Configuration] configuration of the tool.
+  def configure_mariadb(machine, configurator, config)
+    @log.info('Configuring mariadb backend machine')
+    repo_file = "#{config.mdbci_path}/repo.d/community/ubuntu/#{config.mariadb_version}.json"
+    raise "Unable to find MariaDB configuration in '#{repo_file}'" unless File.exist?(repo_file)
+    mariadb_config = JSON.parse(File.read(repo_file)).find { |mariadb| mariadb['platform_version'] == 'xenial' }
+    raise "There was no configuration for 'xanial' in #{repo_file}" if mariadb_config.nil?
+    mariadb_repository = mariadb_config['repo']
+    Dir.mktmpdir('performance-test') do |dir|
+      mariadb_role = "#{dir}/mariadb-host.json"
+      TemplateGenerator.generate('chef-roles/mariadb-host.json.erb', mariadb_role, binding)
+      configurator.configure(machine['network'], machine['whoami'], machine['keyfile'], 'maxscale-host.json',
+                            [[mariadb_role, 'roles/maxscale-host.json']])
     end
   end
 
