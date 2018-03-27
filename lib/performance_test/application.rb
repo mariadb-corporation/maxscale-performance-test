@@ -100,8 +100,10 @@ class Application
     @log.info('Configuring maxscale machine')
     Dir.mktmpdir('performance-test') do |dir|
       maxscale_role = "#{dir}/maxscale-host.json"
-      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, config.internal_binding)
-      configurator.configure(machine['network'], machine['whoami'], machine['keyfile'], 'maxscale-host.json',
+      ubuntu_release = configurator.run_command(machine, 'lsb_release -c | cut -f2').strip
+      maxscale_version = config.maxscale_version
+      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, binding)
+      configurator.configure(machine, 'maxscale-host.json',
                             [[maxscale_role, 'roles/maxscale-host.json']])
     end
   end
@@ -114,14 +116,15 @@ class Application
     @log.info('Configuring mariadb backend machine')
     repo_file = "#{config.mdbci_path}/repo.d/community/ubuntu/#{config.mariadb_version}.json"
     raise "Unable to find MariaDB configuration in '#{repo_file}'" unless File.exist?(repo_file)
-    mariadb_config = JSON.parse(File.read(repo_file)).find { |mariadb| mariadb['platform_version'] == 'xenial' }
-    raise "There was no configuration for 'xanial' in #{repo_file}" if mariadb_config.nil?
+    ubuntu_release = configurator.run_command(machine, 'lsb_release -c | cut -f2').strip
+    mariadb_config = JSON.parse(File.read(repo_file)).find { |mariadb| mariadb['platform_version'] == ubuntu_release }
+    raise "There was no configuration for '#{ubuntu_release}' in #{repo_file}" if mariadb_config.nil?
     mariadb_repository = mariadb_config['repo']
     Dir.mktmpdir('performance-test') do |dir|
       mariadb_role = "#{dir}/mariadb-host.json"
       TemplateGenerator.generate('chef-roles/mariadb-host.json.erb', mariadb_role, binding)
-      configurator.configure(machine['network'], machine['whoami'], machine['keyfile'], 'maxscale-host.json',
-                            [[mariadb_role, 'roles/maxscale-host.json']])
+      configurator.configure(machine, 'mariadb-host.json',
+                            [[mariadb_role, 'roles/mariadb-host.json']])
     end
   end
 

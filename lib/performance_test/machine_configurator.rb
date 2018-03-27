@@ -12,13 +12,21 @@ class MachineConfigurator
     @root_path = root_path
   end
 
+  # Run command on the remote machine and return result to the caller
+  def run_command(machine, command)
+    @log.info("Running command '#{command}' on the '#{machine['network']}' machine")
+    within_ssh_session(machine) do |connection|
+      ssh_exec(connection, command)
+    end
+  end
+
   # rubocop:disable Metrics/ParameterLists
   # Upload chef scripts onto the machine and configure it using specified role. The method is able to transfer
   # extra files into the provision directory making runtime configuration of Chef scripts possible.
   # @param extra_files [Array<Array<String>>] pairs of source and target paths.
-  def configure(address, username, key, config_name, extra_files = [], sudo_password = '', chef_version = '13.8.0')
-    @log.info("Configuring machine #{address} with #{config_name}")
-    within_ssh_session(address, username, key) do |connection|
+  def configure(machine, config_name, extra_files = [], sudo_password = '', chef_version = '13.8.0')
+    @log.info("Configuring machine #{machine['network']} with #{config_name}")
+    within_ssh_session(machine) do |connection|
       install_chef_on_server(connection, sudo_password, chef_version)
       remote_dir = '/tmp/provision'
       copy_chef_files(connection, remote_dir, sudo_password, extra_files)
@@ -30,10 +38,10 @@ class MachineConfigurator
 
   private
 
-  def within_ssh_session(server, user, key)
-    options = Net::SSH.configuration_for(server, true)
-    options[:keys] = [key]
-    Net::SSH.start(server, user, options) do |ssh|
+  def within_ssh_session(machine)
+    options = Net::SSH.configuration_for(machine['network'], true)
+    options[:keys] = [machine['keyfile']]
+    Net::SSH.start(machine['network'], machine['whoami'], options) do |ssh|
       yield ssh
     end
   end
