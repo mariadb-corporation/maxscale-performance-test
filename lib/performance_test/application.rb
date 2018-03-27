@@ -88,15 +88,15 @@ class Application
   def configure_machines(machine_config, config)
     @log.info('Configuring machines')
     configurator = MachineConfigurator.new(@log)
-    configure_maxscale(machine_config.configs['maxscale'], configurator, config)
-    configure_mariadb(machine_config.configs['node_000'], configurator, config)
+    configure_with_chef_maxscale(machine_config.configs['maxscale'], configurator, config)
+    configure_with_chef_mariadb(machine_config.configs['node_000'], configurator, config)
   end
 
   # Configure maxscale according to the configuration
   # @param machine [Hash] parameters of machine to connect to.
   # @param configurator [MachineConfigurator] reference to the configurator.
   # @param config [Configuration] configuration of the tool.
-  def configure_maxscale(machine, configurator, config)
+  def configure_with_chef_maxscale(machine, configurator, config)
     @log.info('Configuring maxscale machine')
     Dir.mktmpdir('performance-test') do |dir|
       maxscale_role = "#{dir}/maxscale-host.json"
@@ -104,7 +104,7 @@ class Application
       maxscale_version = config.maxscale_version
       TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, binding)
       configurator.configure(machine, 'maxscale-host.json',
-                            [[maxscale_role, 'roles/maxscale-host.json']])
+                             [[maxscale_role, 'roles/maxscale-host.json']])
     end
   end
 
@@ -112,7 +112,7 @@ class Application
   # @param machine [Hash] parameters of machine to connect to.
   # @param configurator [MachineConfigurator] reference to the configurator.
   # @param config [Configuration] configuration of the tool.
-  def configure_mariadb(machine, configurator, config)
+  def configure_with_chef_mariadb(machine, configurator, config)
     @log.info('Configuring mariadb backend machine')
     repo_file = "#{config.mdbci_path}/repo.d/community/ubuntu/#{config.mariadb_version}.json"
     raise "Unable to find MariaDB configuration in '#{repo_file}'" unless File.exist?(repo_file)
@@ -124,7 +124,7 @@ class Application
       mariadb_role = "#{dir}/mariadb-host.json"
       TemplateGenerator.generate('chef-roles/mariadb-host.json.erb', mariadb_role, binding)
       configurator.configure(machine, 'mariadb-host.json',
-                            [[mariadb_role, 'roles/mariadb-host.json']])
+                             [[mariadb_role, 'roles/mariadb-host.json']])
     end
   end
 

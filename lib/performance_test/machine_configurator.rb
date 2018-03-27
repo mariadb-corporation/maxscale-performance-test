@@ -20,7 +20,6 @@ class MachineConfigurator
     end
   end
 
-  # rubocop:disable Metrics/ParameterLists
   # Upload chef scripts onto the machine and configure it using specified role. The method is able to transfer
   # extra files into the provision directory making runtime configuration of Chef scripts possible.
   # @param extra_files [Array<Array<String>>] pairs of source and target paths.
@@ -34,7 +33,6 @@ class MachineConfigurator
       sudo_exec(connection, sudo_password, "rm -rf #{remote_dir}")
     end
   end
-  # rubocop:enable Metrics/ParameterLists
 
   private
 
@@ -53,8 +51,8 @@ class MachineConfigurator
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-          .select { |line| line =~ /\p{Graph}+$/ }
-          .each { |line| @log.debug("ssh: #{line}") }
+            .select { |line| line =~ /\p{Graph}+$/ }
+            .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |ch, _, data|
@@ -72,14 +70,15 @@ class MachineConfigurator
   end
   # rubocop:enable Metrics/MethodLength
 
+  # rubocop:disable Metrics/MethodLength
   def ssh_exec(connection, command)
     @log.info("Running '#{command}' on the remote server")
     output = ''
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-          .select { |line| line =~ /\p{Graph}+/ }
-          .each { |line| @log.debug("ssh: #{line}") }
+            .select { |line| line =~ /\p{Graph}+/ }
+            .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
       channel.on_extended_data do |_, _, data|
@@ -90,6 +89,7 @@ class MachineConfigurator
     end.wait
     output
   end
+  # rubocop:enable Metrics/MethodLength
 
   def install_chef_on_server(connection, sudo_password, chef_version)
     @log.info("Installing Chef #{chef_version} on the server.")
@@ -109,7 +109,7 @@ class MachineConfigurator
     ssh_exec(connection, "mkdir -p #{remote_dir}")
     %w[configs vendor-cookbooks roles solo.rb]
       .map { |name| ["#{@root_path}/#{name}", name] }
-      .select { |path, name| File.exist?(path) }
+      .select { |path, _| File.exist?(path) }
       .concat(extra_files)
       .each do |source, target|
       connection.scp.upload!(source, "#{remote_dir}/#{target}", recursive: true)
