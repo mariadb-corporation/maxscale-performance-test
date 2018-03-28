@@ -16,4 +16,6 @@ module PerformanceTest
   TEMPLATES_DIRECTORY = File.expand_path('templates', BASE_DIRECTORY).freeze
   DB_TEMPLATES = File.expand_path('db-config', TEMPLATES_DIRECTORY).freeze
   MAXSCALE_TEMPLATES = File.expand_path('maxscale-config', TEMPLATES_DIRECTORY).freeze
+  MDBCI_TEMPLATES = File.expand_path('mdbci-config', TEMPLATES_DIRECTORY).freeze
+  CHEF_ROLES = File.expand_path('chef-roles', TEMPLATES_DIRECTORY).freeze
 end

@@ -4,6 +4,8 @@ require 'logger'
 require 'open3'
 require 'tmpdir'
 require 'json'
+require 'mysql2'
+require 'pry'
 
 require_relative 'shell_commands'
 # The starting point and controll class for all the application logic
@@ -39,6 +41,7 @@ class Application
       run_test(config, machine_config)
     rescue StandardError => error
       @log.error(error.message)
+      @log.error(error.backtrace.join("\n"))
     end
     destroy_vm(config) if config.create_vms? && !config.keep_servers
   end
@@ -65,7 +68,7 @@ class Application
     @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
     mdbci_template = "#{@mdbci_config}.json"
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
-    TemplateGenerator.generate('mdbci-config/machines.json.erb', mdbci_template.to_s, config.internal_binding)
+    TemplateGenerator.generate("#{PerformanceTest::MDBCI_TEMPLATES}/machines.json.erb", mdbci_template.to_s, config.internal_binding)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
     result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
     raise 'Could not create MDBCI configuration' unless result[:value].success?
@@ -88,8 +91,9 @@ class Application
   def configure_machines(machine_config, config)
     @log.info('Configuring machines')
     configurator = MachineConfigurator.new(@log)
-    configure_with_chef_maxscale(machine_config.configs['maxscale'], configurator, config)
     configure_with_chef_mariadb(machine_config.configs['node_000'], configurator, config)
+    configure_backend_servers(machine_config.configs['node_000'], configurator, config, machine_config)
+    configure_with_chef_maxscale(machine_config.configs['maxscale'], configurator, config)
   end
 
   # Configure maxscale according to the configuration
@@ -102,7 +106,7 @@ class Application
       maxscale_role = "#{dir}/maxscale-host.json"
       ubuntu_release = configurator.run_command(machine, 'lsb_release -c | cut -f2').strip
       maxscale_version = config.maxscale_version
-      TemplateGenerator.generate('chef-roles/maxscale-host.json.erb', maxscale_role, binding)
+      TemplateGenerator.generate("#{PerformanceTest::CHEF_ROLES}/maxscale-host.json.erb", maxscale_role, binding)
       configurator.configure(machine, 'maxscale-host.json',
                              [[maxscale_role, 'roles/maxscale-host.json']])
     end
@@ -122,9 +126,23 @@ class Application
     mariadb_repository = mariadb_config['repo']
     Dir.mktmpdir('performance-test') do |dir|
       mariadb_role = "#{dir}/mariadb-host.json"
-      TemplateGenerator.generate('chef-roles/mariadb-host.json.erb', mariadb_role, binding)
+      TemplateGenerator.generate("#{PerformanceTest::CHEF_ROLES}/mariadb-host.json.erb", mariadb_role, binding)
       configurator.configure(machine, 'mariadb-host.json',
                              [[mariadb_role, 'roles/mariadb-host.json']])
+    end
+  end
+
+  # Use selected SQL scripts to configure MariaDB backend servers.
+  def configure_backend_servers(machine, configurator, config, machine_config)
+    @log.info('Configuring MariaDB servers according to configuration')
+    config.mariadb_init_scripts.each_with_index do |script_path, index|
+      next if script_path.empty?
+      @log.info("Configuring #{index + 1} MariaDB server using #{script_path}")
+      script = TemplateGenerator.generate_string(script_path, machine_config.environment_binding)
+      @log.debug("Using the script:\n#{script}")
+      client = Mysql2::Client.new(host: machine['network'], port: 3301 + index, username: 'skysql', password: 'skysql')
+      statements = script.gsub(/\n/, '').split(";").map(&:strip).delete_if(&:empty?)
+      statements.each { |statement| client.query(statement) }
     end
   end
 

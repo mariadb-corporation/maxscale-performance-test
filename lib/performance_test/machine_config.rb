@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'iniparse'
+require 'ostruct'
 
 # Class provides access to the configuration of machines
 class MachineConfig
@@ -19,6 +20,15 @@ class MachineConfig
         result["#{name}_#{key}"] = value
       end
     end
+  end
+
+  # Provide configureation in the form of the biding
+  def environment_binding
+    result = binding
+    environment_hash.each_pair do |key, value|
+      result.local_variable_set(key.to_sym, value)
+    end
+    result
   end
 
   private
