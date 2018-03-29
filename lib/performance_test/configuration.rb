@@ -8,7 +8,8 @@ class Configuration
   attr_accessor :backend_box, :memory_size, :mariadb_version, :mariadb_init_scripts,
                 :maxscale_box, :maxscale_version, :maxscale_config,
                 :mdbci_path, :mdbci_vm_path, :verbose, :server_config,
-                :keep_servers, :test_app, :already_configured
+                :keep_servers, :local_test_app, :already_configured,
+                :remote_test_app
   # @param logger [Logger] application logger to use
   def initialize(logger)
     @backend_box = 'ubuntu_xenial_libvirt'
@@ -23,7 +24,8 @@ class Configuration
     @verbose = false
     @server_config = ''
     @keep_servers = false
-    @test_app = ''
+    @local_test_app = ''
+    @remote_test_app = ''
     @already_configured = false
     @logger = logger
   end
@@ -42,7 +44,8 @@ class Configuration
     Verbose: #{@verbose}
     Server configuration: #{@server_config}
     Keep servers: #{@keep_servers}
-    Test application: #{@test_app}
+    Local test application: #{@local_test_app}
+    Remote test application: #{@remote_test_app}
     Already configured: #{@already_configured}
     DOC
   end
@@ -97,8 +100,12 @@ class Configuration
         configuration.keep_servers = keep
       end
 
-      opts.on('--test-app=PATH', 'Path to the test that should be executed') do |path|
-        configuration.test_app = File.expand_path(path)
+      opts.on('--local-test-app=PATH', 'Path to the test that should be executed on the host machine') do |path|
+        configuration.local_test_app = File.expand_path(path)
+      end
+
+      opts.on('--remote-test-app=PATH', 'Path to the test that should be executed on the remote maxscale machine') do |path|
+        configuration.remote_test_app = File.expand_path(path)
       end
 
       opts.on('--already-configured=YES', FalseClass, 'If set, the machines will not be configured') do |configured|
@@ -143,12 +150,13 @@ class Configuration
   # @return [Boolean]
   def correct?
     correct = true
-    correct ||= check_file(@maxscale_config, "Maxscale configuration file '#{@maxscale_config}' was not found")
+    correct &&= check_file(@maxscale_config, 'Maxscale configuration')
     @mariadb_init_scripts.each_with_index do |script, index|
       next if script.empty?
-      correct ||= check_file(script, "Maria DB configuration file '#{script}' for #{index} server was not found")
+      correct &&= check_file(script, "Maria DB #{index + 1} configuration")
     end
-    correct ||= check_file(@test_app, "Testing application file '#{@test_app}' was not found.")
+    correct &&= check_file(@local_test_app, 'Local testing application') ||
+                check_file(@remote_test_app, 'Remote testing application')
     correct
   end
 
@@ -161,9 +169,9 @@ class Configuration
   private
 
   # Check that file exists, if not, display error message
-  def check_file(file_name, error_message)
+  def check_file(file_name, description)
     return true if File.exist?(file_name)
-    @logger.error(error_message)
+    @logger.error("#{description} file '#{file_name}' not found")
     false
   end
 end

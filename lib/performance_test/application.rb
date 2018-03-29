@@ -181,12 +181,18 @@ class Application
   # @param configuration [Configuration] configuration to use.
   # @param machine_config [MachineConfig] information about machines.
   def run_test(configuration, machine_config)
-    if configuration.test_app.empty?
-      @log.error('You did not specify test, doing nothing')
-      return
+    unless configuration.local_test_app.empty?
+      @log.info("Running the local test '#{configuration.local_test_app}'")
+      result = run_command_and_log(configuration.local_test_app, false, {}, machine_config.environment_hash)
+      @log.info("Test was success: #{result[:value].success?}")
+    else
+      @log.info("Running the remote test '#{configuration.remote_test_app}")
+      configurator = MachineConfigurator.new(@log)
+      configurator.within_ssh_session(machine_config.configs['maxscale']) do |connection|
+        configurator.upload_file(connection, configuration.remote_test_app, '/tmp/test')
+        configurator.ssh_exec(connection, 'chmod +x /tmp/test')
+        configurator.ssh_exec(connection, '/tmp/test')
+      end
     end
-    @log.info("Running the test '#{configuration.test_app}'")
-    result = run_command_and_log(configuration.test_app, false, {}, machine_config.environment_hash)
-    @log.info("Test was success: #{result[:value].success?}")
   end
 end
