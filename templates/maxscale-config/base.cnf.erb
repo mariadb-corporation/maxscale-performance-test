@@ -4,7 +4,7 @@ threads=2
 [MySQL Monitor]
 type=monitor
 module=mysqlmon
-servers=server1,server2
+servers=server1,server2,server3,server4
 user=skysql
 passwd=skysql
 monitor_interval=1000
@@ -14,7 +14,7 @@ detect_standalone_master=false
 [RW Split Router]
 type=service
 router=readwritesplit
-servers=server1,server2
+servers=server1,server2,server3,server4
 user=maxskysql
 passwd=skysql
 router_options=slave_selection_criteria=LEAST_GLOBAL_CONNECTIONS
@@ -36,15 +36,10 @@ service=CLI
 protocol=maxscaled
 socket=default
 
-[server1]
+<% 1.upto(4).each do |server| %>
+[server<%= server %>]
 type=server
-address=${node_000_network}
-port=3301
+address=<%= node_000_network %>
+port=330<%= server %>
 protocol=MySQLBackend
-
-[server2]
-type=server
-address=${node_000_network}
-port=3302
-protocol=MySQLBackend
-
+<% end %>

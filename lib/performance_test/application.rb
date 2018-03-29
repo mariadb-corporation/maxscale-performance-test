@@ -40,6 +40,7 @@ class Application
       configure_machines(machine_config, config) unless config.already_configured
       run_test(config, machine_config)
     rescue StandardError => error
+      @log.error("Caught error: #{error.class}")
       @log.error(error.message)
       @log.error(error.backtrace.join("\n"))
     end
@@ -92,11 +93,12 @@ class Application
     @log.info('Configuring machines')
     configurator = MachineConfigurator.new(@log)
     configure_with_chef_mariadb(machine_config.configs['node_000'], configurator, config)
-    configure_backend_servers(machine_config.configs['node_000'], configurator, config, machine_config)
+    configure_backend_servers(machine_config.configs['node_000'], config, machine_config)
     configure_with_chef_maxscale(machine_config.configs['maxscale'], configurator, config)
+    configure_maxscale_server(machine_config.configs['maxscale'], configurator, config, machine_config)
   end
 
-  # Configure maxscale according to the configuration
+  # Configure maxscale server machine with the Chef recipie
   # @param machine [Hash] parameters of machine to connect to.
   # @param configurator [MachineConfigurator] reference to the configurator.
   # @param config [Configuration] configuration of the tool.
@@ -110,6 +112,34 @@ class Application
       configurator.configure(machine, 'maxscale-host.json',
                              [[maxscale_role, 'roles/maxscale-host.json']])
     end
+  end
+
+  # Configure maxscale with the proposed configuration file
+  # @param machine [Hash] parameters of server to connect to
+  # @param configurator [MachineConfigurator] reference to the configurator.
+  # @param config [Configuration] reference to the configuration.
+  # @param machine_config [MachineConfig] configuation of machines to use
+  def configure_maxscale_server(machine, configurator, config, machine_config)
+    @log.info('Configuring MaxScale server')
+    Dir.mktmpdir('performance-test') do |dir|
+      maxscale_config = "#{dir}/maxscale.cnf"
+      TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
+      configurator.within_ssh_session(machine) do |connection|
+        configurator.sudo_exec(connection, '', 'sudo service maxscale stop')
+        configurator.upload_file(connection, maxscale_config, '/tmp/maxscale.cnf')
+        configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
+        configurator.sudo_exec(connection, '', 'sudo service maxscale start')
+      end
+    end
+    client = Mysql2::Client.new(host: machine['network'], port: 4006, username: 'skysql', password: 'skysql')
+    begin
+      client.query('drop database test')
+    rescue Mysql2::Error => error
+      @log.error('Unable to drop database test.')
+      @log.error("Caugt error #{error.class}. With message:")
+      @log.error(error.message)
+    end
+    client.query('create database test')
   end
 
   # Configure machine as mariadb using passed parameters.
@@ -133,7 +163,7 @@ class Application
   end
 
   # Use selected SQL scripts to configure MariaDB backend servers.
-  def configure_backend_servers(machine, configurator, config, machine_config)
+  def configure_backend_servers(machine, config, machine_config)
     @log.info('Configuring MariaDB servers according to configuration')
     config.mariadb_init_scripts.each_with_index do |script_path, index|
       next if script_path.empty?

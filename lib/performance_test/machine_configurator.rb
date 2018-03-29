@@ -34,8 +34,8 @@ class MachineConfigurator
     end
   end
 
-  private
-
+  # Connect to the specified machine and yield active connection
+  # @param machine [Hash] information about machine to connect
   def within_ssh_session(machine)
     options = Net::SSH.configuration_for(machine['network'], true)
     options[:keys] = [machine['keyfile']]
@@ -91,6 +91,17 @@ class MachineConfigurator
   end
   # rubocop:enable Metrics/MethodLength
 
+  # Upload specified file to the remote location on the server
+  # @param connection [Connection] ssh connection to use
+  # @param source [String] path to the file on the local machine
+  # @param target [String] path to the file on the remote machine
+  # @param recursive [Boolean] use recursive copying or not
+  def upload_file(connection, source, target, recursive = true)
+    connection.scp.upload!(source, target, recursive: recursive)
+  end
+
+  private
+
   def install_chef_on_server(connection, sudo_password, chef_version)
     @log.info("Installing Chef #{chef_version} on the server.")
     output = ssh_exec(connection, 'chef-solo --version')
@@ -112,7 +123,7 @@ class MachineConfigurator
       .select { |path, _| File.exist?(path) }
       .concat(extra_files)
       .each do |source, target|
-      connection.scp.upload!(source, "#{remote_dir}/#{target}", recursive: true)
+      upload_file(connection, source, "#{remote_dir}/#{target}")
     end
   end
 
