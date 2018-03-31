@@ -96,6 +96,7 @@ class Application
     configure_backend_servers(machine_config.configs['node_000'], config, machine_config)
     configure_with_chef_maxscale(machine_config.configs['maxscale'], configurator, config)
     configure_maxscale_server(machine_config.configs['maxscale'], configurator, config, machine_config)
+    create_test_database(machine_config.configs['maxscale']['network'])
   end
 
   # Configure maxscale server machine with the Chef recipie
@@ -131,7 +132,29 @@ class Application
         configurator.sudo_exec(connection, '', 'sudo service maxscale start')
       end
     end
-    client = Mysql2::Client.new(host: machine['network'], port: 4006, username: 'skysql', password: 'skysql')
+  end
+
+  # Create test database on the maxscale server and test that everything works
+  # as expected
+  # @param server [String] address of the server to connect to
+  def create_test_database(server)
+    @log.info('Creating test database on the server')
+    attempt = 0
+    begin
+      client = Mysql2::Client.new(host: server, port: 4006, username: 'skysql', password: 'skysql')
+    rescue Mysql2::Error => error
+      @log.error('Unable to connect to MaxScale.')
+      @log.error(error.message)
+      attempt += 1
+      if attempt < 3
+        @log.info('Retrying MaxScale database connection.')
+        sleep 5
+        retry
+      else
+        @log.error('Unable to connect to MaxScale after 3 attempts.')
+        raise
+      end
+    end
     begin
       client.query('drop database test')
     rescue Mysql2::Error => error
