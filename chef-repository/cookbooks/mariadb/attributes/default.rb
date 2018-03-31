@@ -15,3 +15,7 @@ default["mariadb"]["cnf_template"] = "server1.cnf"
 
 # number of multi servers to setup
 default['mariadb']['servers'] = 4
+
+# Names of pagkages that should be uninstall or purged when
+# uninstalling corresponding
+default['mariadb']['debian-packages'] = %w(mariadb-server mariadb-client mariadb-common mysql-common)
