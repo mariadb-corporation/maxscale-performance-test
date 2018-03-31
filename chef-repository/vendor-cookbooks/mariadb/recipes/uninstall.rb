@@ -1,13 +1,21 @@
 case node[:platform_family]
 when "debian"
-  package "mariadb-common" do
-    action :remove
+  node['mariadb']['debian-packages'].each do |name|
+    package name do
+      action :remove
+    end
   end
-  execute "Remove mariadb repository" do
-    command "rm -fr /etc/apt/sources.list.d/mariadb.list"
+  file '/etc/apt/sources.list.d/mariadb.list' do
+    action :delete
   end
-  execute "update" do
-    command "apt-get update"
+  apt_update 'update'
+
+  # Automatically remove packages that are no longer needed for dependencies
+  execute 'apt-get autoremove' do
+    command 'apt-get -y autoremove'
+    environment(
+      'DEBIAN_FRONTEND' => 'noninteractive'
+    )
   end
 when "rhel", "fedora", "suse"
   package "MariaDB-common" do

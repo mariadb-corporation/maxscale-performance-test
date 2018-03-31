@@ -15,7 +15,7 @@ GRAPH
   ips (0.1.0)
   ips-omniti (0.0.2)
     ips (>= 0.0.0)
-  mariadb (0.0.2)
+  mariadb (0.0.3)
     ntp (>= 0.0.0)
     packages (>= 0.0.0)
   ntp (3.5.6)

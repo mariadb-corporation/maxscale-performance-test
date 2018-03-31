@@ -7,8 +7,6 @@ include_recipe 'packages::configure_apt'
   package pkg
 end
 #
-#
-#
 case node[:platform_family]
   when "debian", "ubuntu", "mint"
   # Add repo key
@@ -23,7 +21,7 @@ case node[:platform_family]
   #6373 to be removed command 'echo "deb ' + node['mariadb']['repo'] + '/' + node['mariadb']['version'] + '/' + node[:platform] + ' ' + release_name + ' main" > /etc/apt/sources.list.d/mariadb.list'
   addrepocmd = 'echo "deb '+ node['mariadb']['repo']+' ">/etc/apt/sources.list.d/mariadb.list'
 
-  # Add repo
+  # Add repository
   execute "Repository add" do
     command addrepocmd
   end

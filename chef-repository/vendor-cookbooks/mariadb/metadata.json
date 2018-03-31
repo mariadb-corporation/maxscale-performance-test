@@ -32,13 +32,14 @@
   "groupings": {
   },
   "recipes": {
-    "develop": "Prepares environment to build MariaDB",
-    "install": "Installs Enterprise edition",
-    "uninstall": "Uninstalls any edition",
-    "purge": "Uninstalls any edition and remove all data",
-    "start": "Creates new instance of service and starts it"
+    "install_community": "Installs community version of mariadb",
+    "uninstall": "Uninstalls mariadb and clears repository configuration",
+    "purge": "Uninstalls packages and manually removes all known directories",
+    "install_multi_server": "Installs, runs and configures multi-server setup of mariadb on single node",
+    "purge_multi_server": "Removes configuration of multiserver and calls purge script",
+    "setup_multi_server": "Removes current version and makes fresh installation of multiple servers"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "source_url": "",
   "issues_url": "",
   "privacy": false,
