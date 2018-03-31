@@ -1,4 +1,18 @@
+include_recipe 'mariadb::purge'
 include_recipe 'mariadb::install_community'
+
+# Stop the main database
+execute 'Stop the main database' do
+  command 'systemctl stop mysql'
+end
+
+# Create mysql directory that is destroyed during the purge
+directory '/etc/mysql' do
+  owner 'root'
+  group 'root'
+  mode '0755'
+  action :create
+end
 
 # Create configuration file
 template '/etc/mysql/multiple_servers.cnf' do
@@ -89,11 +103,6 @@ end
   execute "Create databases for #{server} mysql server" do
     command "mysql_install_db --defaults-file=/etc/mysql/multiple_servers.cnf --user=mysql --datadir=/data/mysql/mysql#{server}"
   end
-end
-
-# Stop the main database
-execute 'Stop the main database' do
-  command 'systemctl stop mysql'
 end
 
 # Start the multi-node service using systemd (it does not work)
