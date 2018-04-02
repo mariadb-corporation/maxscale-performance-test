@@ -5,9 +5,8 @@ require 'open3'
 require 'tmpdir'
 require 'json'
 require 'mysql2'
-require 'pry'
-
 require_relative 'shell_commands'
+
 # The starting point and controll class for all the application logic
 class Application
   attr_reader :log
