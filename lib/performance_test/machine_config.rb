@@ -26,7 +26,7 @@ class MachineConfig
   def environment_binding
     result = binding
     environment_hash.merge(ENV).each_pair do |key, value|
-      result.local_variable_set(key.to_sym, value)
+      result.local_variable_set(key.downcase.to_sym, value)
     end
     result
   end

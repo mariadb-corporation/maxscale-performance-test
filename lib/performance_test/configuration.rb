@@ -145,7 +145,7 @@ class Configuration
   def internal_binding
     bond = binding
     ENV.each_pair do |key, value|
-      bond.local_variable_set(key.to_sym, value)
+      bond.local_variable_set(key.downcase.to_sym, value)
     end
     bond
   end
