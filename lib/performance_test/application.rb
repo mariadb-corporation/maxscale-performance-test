@@ -111,6 +111,11 @@ class Application
       TemplateGenerator.generate("#{PerformanceTest::CHEF_ROLES}/maxscale-host.json.erb", maxscale_role, binding)
       configurator.configure(machine, 'maxscale-host.json',
                              [[maxscale_role, 'roles/maxscale-host.json']])
+      configurator.within_ssh_session(machine) do |connection|
+        version_info = configurator.ssh_exec(connection, 'maxscale --version-full')
+        @log.info("Maxscale version info:\n#{version_info}")
+      end
+      @log.info('Installed the following ')
     end
   end
 
@@ -125,10 +130,10 @@ class Application
       maxscale_config = "#{dir}/maxscale.cnf"
       TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
       configurator.within_ssh_session(machine) do |connection|
-        configurator.sudo_exec(connection, '', 'sudo service maxscale stop')
+        configurator.sudo_exec(connection, '', 'service maxscale stop')
         configurator.upload_file(connection, maxscale_config, '/tmp/maxscale.cnf')
         configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
-        configurator.sudo_exec(connection, '', 'sudo service maxscale start')
+        configurator.sudo_exec(connection, '', 'service maxscale start')
       end
     end
   end
