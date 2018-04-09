@@ -143,7 +143,11 @@ class Configuration
   # rubocop:enable Metrics/BlockLength
 
   def internal_binding
-    binding
+    bond = binding
+    ENV.each_pair do |key, value|
+      bond.local_variable_set(key.to_sym, value)
+    end
+    bond
   end
 
   # Checks whether the configuration file is correct.

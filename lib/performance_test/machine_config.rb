@@ -25,7 +25,7 @@ class MachineConfig
   # Provide configureation in the form of the biding
   def environment_binding
     result = binding
-    environment_hash.each_pair do |key, value|
+    environment_hash.merge(ENV).each_pair do |key, value|
       result.local_variable_set(key.to_sym, value)
     end
     result
