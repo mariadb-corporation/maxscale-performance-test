@@ -21,7 +21,7 @@ class TemplateGenerator
   # @param template_name [String] name of the template to use
   # @param context [Binding] scope to use during the template burn.
   def self.generate_string(template_name, context)
-    template_text = File.read("#{template_name}")
+    template_text = File.read(template_name)
     template = ERB.new(template_text)
     template.result(context)
   end

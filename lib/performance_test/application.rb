@@ -70,7 +70,8 @@ class Application
     @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
     mdbci_template = "#{@mdbci_config}.json"
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
-    TemplateGenerator.generate("#{PerformanceTest::MDBCI_TEMPLATES}/machines.json.erb", mdbci_template.to_s, config.internal_binding)
+    TemplateGenerator.generate("#{PerformanceTest::MDBCI_TEMPLATES}/machines.json.erb",
+                               mdbci_template.to_s, config.internal_binding)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
     result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
     raise 'Could not create MDBCI configuration' unless result[:value].success?
@@ -200,7 +201,7 @@ class Application
       script = TemplateGenerator.generate_string(script_path, machine_config.environment_binding)
       @log.debug("Using the script:\n#{script}")
       client = Mysql2::Client.new(host: machine['network'], port: 3301 + index, username: 'skysql', password: 'skysql')
-      statements = script.gsub(/\n/, '').split(";").map(&:strip).delete_if(&:empty?)
+      statements = script.gsub(/\n/, '').split(';').map(&:strip).delete_if(&:empty?)
       statements.each { |statement| client.query(statement) }
     end
   end
@@ -210,7 +211,7 @@ class Application
   # @param configuration [Configuration] configuration to use.
   # @param machine_config [MachineConfig] information about machines.
   def run_test(configuration, machine_config)
-    unless configuration.local_test_app.empty?
+    if configuration.remote_test_app.empty?
       @log.info("Running the local test '#{configuration.local_test_app}'")
       result = run_command_and_log(configuration.local_test_app, false, {}, machine_config.environment_hash)
       @log.info("Test was success: #{result[:value].success?}")
@@ -230,7 +231,7 @@ class Application
 
   # Save current environment into the file for use in external environment
   # @return [String] path to the created environment file
-  def save_environment()
+  def save_environment
     file = Tempfile.new
     ENV.each_pair do |key, value|
       file.puts(": ${#{key}=#{value}}")

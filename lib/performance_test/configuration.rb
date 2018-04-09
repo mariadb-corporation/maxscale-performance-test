@@ -104,7 +104,7 @@ class Configuration
         configuration.local_test_app = File.expand_path(path)
       end
 
-      opts.on('--remote-test-app=PATH', 'Path to the test that should be executed on the remote maxscale machine') do |path|
+      opts.on('--remote-test-app=PATH', 'Path to the test that should be executed on the remote machine') do |path|
         configuration.remote_test_app = File.expand_path(path)
       end
 
