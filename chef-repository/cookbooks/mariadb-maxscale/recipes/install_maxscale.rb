@@ -124,6 +124,9 @@ when "suse"
     command "zypper -n install maxscale"
   end
 when "debian"
+  execute "remove old" do
+    command "apt-get remove -y --force-yes maxscale"
+  end
   package 'maxscale'
 when "windows"
   windows_package "maxscale" do
