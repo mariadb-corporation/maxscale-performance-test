@@ -3,6 +3,8 @@
 require 'logger'
 require 'open3'
 require 'tmpdir'
+require 'tempfile'
+require 'fileutils'
 require 'json'
 require 'mysql2'
 require_relative 'shell_commands'
@@ -216,10 +218,26 @@ class Application
       @log.info("Running the remote test '#{configuration.remote_test_app}")
       configurator = MachineConfigurator.new(@log)
       configurator.within_ssh_session(machine_config.configs['maxscale']) do |connection|
+        environment_file = save_environment
+        configurator.upload_file(connection, environment_file, '/tmp/env-test')
+        FileUtils.rm_f(environment_file)
         configurator.upload_file(connection, configuration.remote_test_app, '/tmp/test')
         configurator.ssh_exec(connection, 'chmod +x /tmp/test')
-        configurator.ssh_exec(connection, '/tmp/test')
+        configurator.ssh_exec(connection, 'source /tmp/env-test && /tmp/test')
       end
     end
+  end
+
+  # Save current environment into the file for use in external environment
+  # @return [String] path to the created environment file
+  def save_environment()
+    file = Tempfile.new
+    ENV.each_pair do |key, value|
+      file.puts(": ${#{key}=#{value}}")
+      file.puts("export #{key}")
+    end
+    path = file.path
+    file.close
+    path
   end
 end
