@@ -28,4 +28,4 @@ platforms:
 suites:
   - name: default
     run_list:
-      - recipe[mariadb-maxscale::install_maxscale]
+      - recipe[mariadb-maxscale::reinstall_maxscale]
