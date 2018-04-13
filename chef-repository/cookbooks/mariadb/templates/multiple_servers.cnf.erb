@@ -13,4 +13,5 @@ socket            = /var/run/mysqld/mysqld<%= server %>.sock
 port              = 330<%= server %>
 bind-address      = 0.0.0.0
 datadir           = /data/mysql/mysql<%= server %>
+max_connections   = 1000
 <% end %>
