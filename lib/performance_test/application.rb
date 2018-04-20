@@ -7,6 +7,7 @@ require 'tempfile'
 require 'fileutils'
 require 'json'
 require 'mysql2'
+require 'fileutils'
 require_relative 'shell_commands'
 
 # The starting point and controll class for all the application logic
@@ -129,6 +130,8 @@ class Application
   # @param machine_config [MachineConfig] configuation of machines to use
   def configure_maxscale_server(machine, configurator, config, machine_config)
     @log.info('Configuring MaxScale server')
+    output_dir = "#{Dir.pwd}/performance-test-maxscale-config"
+    Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
     Dir.mktmpdir('performance-test') do |dir|
       maxscale_config = "#{dir}/maxscale.cnf"
       TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
@@ -138,6 +141,9 @@ class Application
         configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
         configurator.sudo_exec(connection, '', 'service maxscale start')
       end
+      FileUtils.rm "#{output_dir}/maxscale.cnf" if File.file?("#{output_dir}/maxscale.cnf")
+      FileUtils.cp "#{dir}/maxscale.cnf", "#{output_dir}/maxscale.cnf"
+      @log.info("MaxScale config file path: #{output_dir}/maxscale.cnf")
     end
   end
 
