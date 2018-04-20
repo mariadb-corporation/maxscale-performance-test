@@ -139,7 +139,7 @@ class Application
       configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
       configurator.sudo_exec(connection, '', 'service maxscale start')
     end
-    @log.info("MaxScale config file path: #{maxscale_config}")
+    @log.info("MaxScale configuration: #{maxscale_config}")
   end
 
   # Create test database on the maxscale server and test that everything works
