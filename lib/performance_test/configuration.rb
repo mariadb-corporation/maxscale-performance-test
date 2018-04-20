@@ -38,7 +38,6 @@ class Configuration
     MariaDB version: #{@mariadb_version}
     MariaDB init scripts: #{mariadb_init_scripts}
     MaxScale version: #{@maxscale_version}
-    MaxScale configuration: #{@maxscale_config}
     MDBCI path: #{@mdbci_path}
     MDBCI VM configuration path: #{@mdbci_vm_path}
     Verbose: #{@verbose}

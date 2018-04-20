@@ -129,16 +129,17 @@ class Application
   # @param machine_config [MachineConfig] configuation of machines to use
   def configure_maxscale_server(machine, configurator, config, machine_config)
     @log.info('Configuring MaxScale server')
-    Dir.mktmpdir('performance-test') do |dir|
-      maxscale_config = "#{dir}/maxscale.cnf"
-      TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
-      configurator.within_ssh_session(machine) do |connection|
-        configurator.sudo_exec(connection, '', 'service maxscale stop')
-        configurator.upload_file(connection, maxscale_config, '/tmp/maxscale.cnf')
-        configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
-        configurator.sudo_exec(connection, '', 'service maxscale start')
-      end
+    output_dir = "#{Dir.pwd}/performance-test-maxscale-config"
+    Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
+    maxscale_config = "#{output_dir}/maxscale.cnf"
+    TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
+    configurator.within_ssh_session(machine) do |connection|
+      configurator.sudo_exec(connection, '', 'service maxscale stop')
+      configurator.upload_file(connection, maxscale_config, '/tmp/maxscale.cnf')
+      configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
+      configurator.sudo_exec(connection, '', 'service maxscale start')
     end
+    @log.info("MaxScale configuration: #{maxscale_config}")
   end
 
   # Create test database on the maxscale server and test that everything works
