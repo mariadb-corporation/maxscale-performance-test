@@ -28,24 +28,36 @@ class Application
   # Starts the execution of the system test
   # rubocop:disable Metrics/MethodLength
   def run
-    @log.info('Starting the system test')
-    config = read_configuration
-    begin
-      if config.create_vms?
-        setup_vm(config)
-        config_path = "#{@mdbci_config}_network_config"
-      else
-        config_path = config.server_config
+    lock_file_dir = "#{ENV["HOME"]}/maxscale-performance-test"
+    Dir.mkdir(lock_file_dir) if !Dir.exist?(lock_file_dir)
+    lock_file = "#{lock_file_dir}/#{File.basename($PROGRAM_NAME)}_lock"
+    File.open(lock_file, "w") do |f|
+      begin
+        @log.info('Taking ownership of the lock file...')
+        f.flock(File::LOCK_EX)
+        @log.info('Starting the system test')
+        config = read_configuration
+        begin
+          if config.create_vms?
+            setup_vm(config)
+            config_path = "#{@mdbci_config}_network_config"
+          else
+            config_path = config.server_config
+          end
+          machine_config = MachineConfig.new(config_path)
+          configure_machines(machine_config, config) unless config.already_configured
+          run_test(config, machine_config)
+        rescue StandardError => error
+          @log.error("Caught error: #{error.class}")
+          @log.error(error.message)
+          @log.error(error.backtrace.join("\n"))
+        end
+        destroy_vm(config) if config.create_vms? && !config.keep_servers
+      ensure
+        f.flock(File::LOCK_UN)
+        File.delete(lock_file) if File.exist?(lock_file)
       end
-      machine_config = MachineConfig.new(config_path)
-      configure_machines(machine_config, config) unless config.already_configured
-      run_test(config, machine_config)
-    rescue StandardError => error
-      @log.error("Caught error: #{error.class}")
-      @log.error(error.message)
-      @log.error(error.backtrace.join("\n"))
     end
-    destroy_vm(config) if config.create_vms? && !config.keep_servers
   end
   # rubocop:enable Metrics/MethodLength
 
