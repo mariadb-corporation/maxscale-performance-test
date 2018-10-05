@@ -51,7 +51,7 @@ class MachineConfigurator
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-            .select { |line| line =~ /\p{Graph}+$/ }
+            .select { |line| line.encode!('UTF-8', :undef => :replace, :invalid => :replace, :replace => "") =~ /\p{Graph}+$/ }
             .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
@@ -77,7 +77,7 @@ class MachineConfigurator
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-            .select { |line| line =~ /\p{Graph}+/ }
+            .select { |line| line.encode!('UTF-8', :undef => :replace, :invalid => :replace, :replace => "") =~ /\p{Graph}+/ }
             .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
