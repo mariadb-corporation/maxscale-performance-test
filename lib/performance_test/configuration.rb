@@ -75,7 +75,7 @@ class Configuration
         raise ArgumentError, 'Memory size must be positive integer' if configuration.memory_size <= 0
       end
 
-      opts.on('--maxscale-box=BOX', 'Box to install for maxscale') do |box|
+      opts.on('--maxscale-box=BOX', 'Box to install for MaxScale') do |box|
         configuration.maxscale_box = box
       end
 
@@ -153,7 +153,7 @@ class Configuration
   # @return [Boolean]
   def correct?
     correct = true
-    correct &&= check_file(@maxscale_config, 'Maxscale configuration')
+    correct &&= check_file(@maxscale_config, 'MaxScale configuration')
     @mariadb_init_scripts.each_with_index do |script, index|
       next if script.empty?
       correct &&= check_file(script, "Maria DB #{index + 1} configuration")

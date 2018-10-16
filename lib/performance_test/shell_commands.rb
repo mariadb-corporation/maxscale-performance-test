@@ -3,16 +3,35 @@
 # This is the mixin that executes commands on the shell, logs it.
 # Mixin depends on log attribute that points to the logger.
 module ShellCommands
+  PREFIX = 'OLD_ENV_'.freeze
+
+  @@env = if ENV['APPIMAGE'] != 'true'
+            ENV
+          else
+            {}
+          end
+
+  # Get the environment for external service to run in
+  def self.environment
+    return @@env unless @@env.empty?
+    ENV.each_pair do |key, value|
+      next unless key.include?(PREFIX)
+      correct_key = key.sub(/^#{PREFIX}/, '')
+      @@env[correct_key] = value
+    end
+    @@env
+  end
+
   # Execute the command, log stdout and stderr
   #
   # @param command [String] command to run
-  # @param show_idle_notifications [Boolean] show notifications when there is no
+  # @param show_notifications [Boolean] show notifications when there is no
   # @param options [Hash] options that are passed to popen3 command.
   # @param env [Hash] environment parameters that are passed to popen3 command.
   # @return [Process::Status] of the run command
   # rubocop:disable Metrics/MethodLength
   # rubocop:disable Metrics/BlockLength
-  def run_command_and_log(command, show_idle_notifications = false, options = {}, env = {})
+  def run_command_and_log(command, show_notifications = false, options = {}, env = ShellCommands.environment)
     log.info("Invoking command: #{command}")
     Open3.popen3(env, command, options) do |stdin, stdout, stderr, wthr|
       stdin.close
@@ -31,7 +50,7 @@ module ShellCommands
         alive_streams = wait_streams.reject(&:nil?)
         break if alive_streams.empty?
         result = IO.select(alive_streams, nil, nil, 300)
-        if result.nil? && show_idle_notifications
+        if result.nil? && show_notifications
           log.error('The running command was inactive for 5 minutes.')
           log.error("The command is: '#{command}'.")
         end
@@ -56,7 +75,7 @@ module ShellCommands
   end
 
   # Execute the command, log stdout and stderr. If command was not
-  # successfull, then print information to error stream.
+  # successful, then print information to error stream.
   #
   # @param command [String] command to run
   # @param message [String] message to display in case of failure
@@ -68,7 +87,7 @@ module ShellCommands
   end
 
   # Execute the command in the specified directory, log stdout and stderr.
-  # If command was not successfull, then print it onto error stream.
+  # If command was not successful, then print it onto error stream.
   #
   # @param command [String] command to run
   # @param dir [String] directory to run command in
@@ -80,10 +99,10 @@ module ShellCommands
   private
 
   # Method reads the data from the stream in the non-blocking manner.
-  # Each read string is yield to the assosiated block.
+  # Each read string is yield to the associated block.
   #
   # @param stream [IO] input stream to read data from.
-  # @return [IO] stream or nil if stream has ended. Returninng nil is crusial
+  # @return [IO] stream or nil if stream has ended. Returning nil is crucial
   # as we do not have any other information on when stream has ended.
   def read_stream(stream)
     begin
