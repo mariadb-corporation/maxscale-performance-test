@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=performance-test
-Exec=performance-test
-Icon=performance-test
+Name=performance_test
+Exec=performance_test
+Icon=performance_test
 Type=Application
 Categories=Utility;
 Terminal=true

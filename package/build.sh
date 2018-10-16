@@ -33,7 +33,7 @@ done
 # Copy all files required by ruby.appimage
 for extension in desktop png sh
 do
-  cp performance-test."$extension" "$BUILD_DIR/"
+  cp performance_test."$extension" "$BUILD_DIR/"
 done
 
 # Copy the runner directory to the build
@@ -41,5 +41,5 @@ cp -r "runner" "$BUILD_DIR/"
 
 # Start the build using ruby.appimage
 pushd $BUILD_DIR
-"$CURRENT_DIR/ruby.appimage/docker_build.sh" performance-test $BUILD_VERSION
+"$CURRENT_DIR/ruby.appimage/docker_build.sh" performance_test $BUILD_VERSION
 popd

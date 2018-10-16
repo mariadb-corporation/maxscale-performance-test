@@ -30,6 +30,9 @@ mkdir $APP_DIR/performance-gems
 echo "--> copying performance-test sources"
 cp -r performance-test $APP_DIR/
 
+echo "--> installing libmysql client development files"
+sudo apt-get install -y libmysqlclient-dev
+
 echo "--> installing performance-test dependencies"
 pushd $APP_DIR/performance-test
 gem_home $APP_DIR/performance-gems
@@ -41,8 +44,8 @@ popd
 
 echo "--> creating symlink and fixing path to ruby"
 pushd $APP_DIR/usr/bin
-ln -sf ../../performance-test/bin/performance-test performance-test
-insert_app_run_header performance-test
+ln -sf ../../performance-test/bin/performance_test performance_test
+insert_app_run_header performance_test
 popd
 
 echo "--> creating and insalling custom runner"
