@@ -33,6 +33,7 @@ module ShellCommands
   # rubocop:disable Metrics/BlockLength
   def run_command_and_log(command, show_notifications = false, options = {}, env = ShellCommands.environment)
     log.info("Invoking command: #{command}")
+    options[:unsetenv_others] = true
     Open3.popen3(env, command, options) do |stdin, stdout, stderr, wthr|
       stdin.close
       stdout_text = ''

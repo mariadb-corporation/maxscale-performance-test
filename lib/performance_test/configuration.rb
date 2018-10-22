@@ -80,11 +80,11 @@ class Configuration
       end
 
       opts.on('--mdbci-path=PATH', 'Path to the MDBCI directory') do |path|
-        configuration.mdbci_path = File.expand_path(path)
+        configuration.mdbci_path = file_reference(path)
       end
 
       opts.on('--mdbci-vm-path=PATH', 'Directory where MDBCI configuration should be stored') do |path|
-        configuration.mdbci_vm_path = File.expand_path(path)
+        configuration.mdbci_vm_path = file_reference(path)
       end
 
       opts.on('-v', '--verbose', TrueClass, 'Should display verbose output') do |verbose|
@@ -92,7 +92,7 @@ class Configuration
       end
 
       opts.on('--server-config=PATH', 'Path to the servers configuration to use') do |path|
-        configuration.server_config = File.expand_path(path)
+        configuration.server_config = file_reference(path)
       end
 
       opts.on('--keep-servers', TrueClass, 'Should we destroy the MDBCI machines or not when completed') do |keep|
@@ -100,11 +100,11 @@ class Configuration
       end
 
       opts.on('--local-test-app=PATH', 'Path to the test that should be executed on the host machine') do |path|
-        configuration.local_test_app = File.expand_path(path)
+        configuration.local_test_app = file_reference(path)
       end
 
       opts.on('--remote-test-app=PATH', 'Path to the test that should be executed on the remote machine') do |path|
-        configuration.remote_test_app = File.expand_path(path)
+        configuration.remote_test_app = file_reference(path)
       end
 
       opts.on('--already-configured=YES', FalseClass, 'If set, the machines will not be configured') do |configured|
@@ -140,6 +140,21 @@ class Configuration
   end
   # rubocop:enable Metrics/MethodLength
   # rubocop:enable Metrics/BlockLength
+
+  # Get the reference to the file. First checks the AppImage file and then the working directory.
+  # Do nothing to the absolute file paths.
+  # @param file_name [String] name of the file to get
+  # @return [String] path to the
+  def self.file_reference(file_name)
+    expanded_path = File.expand_path(file_name)
+    return file_name if file_name == expanded_path
+    dirs = [PerformanceTest::BASE_DIRECTORY, ENV['OLD_CWD']]
+    dirs.each do |directory|
+      file_path = File.expand_path(file_name, directory)
+      return file_path if File.exist?(file_path)
+    end
+    file_name
+  end
 
   def internal_binding
     bond = binding
