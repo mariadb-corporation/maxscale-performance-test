@@ -205,8 +205,8 @@ class Application
   # @param config [Configuration] configuration of the tool.
   def configure_with_chef_mariadb(machine, configurator, config)
     @log.info('Configuring mariadb backend machine')
-    repo_file = "#{Dir.home}/.config/mdbci/repo.d/mariadb/ubuntu/#{config.mariadb_version}.json"
-    raise "Unable to find MariaDB configuration in '#{repo_file}'" unless File.exist?(repo_file)
+    repo_file = "#{Dir.home}/.config/mdbci/repo.d/community/ubuntu/#{config.mariadb_version}.json"
+    raise "Unable to find MariaDB configuration in '#{repo_file}'." unless File.exist?(repo_file)
     ubuntu_release = configurator.run_command(machine, 'lsb_release -c | cut -f2').strip
     mariadb_config = JSON.parse(File.read(repo_file)).find { |mariadb| mariadb['platform_version'] == ubuntu_release }
     raise "There was no configuration for '#{ubuntu_release}' in #{repo_file}" if mariadb_config.nil?
