@@ -83,11 +83,7 @@ class Application
   # @param config [Configuration] configuration to use during creation.
   # @return name of the configuration that is being used.
   def setup_vm(config)
-    @log.info('Creating VMs using MDBCI')
-    current_time = Time.now.strftime('%Y%m%d-%H%M%S')
-    @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
-    mdbci_template = "#{@mdbci_config}.json"
-    @log.info("Creating MDBCI configuration template #{mdbci_template}")
+    mdbci_template = generate_template(config)
     TemplateGenerator.generate("#{PerformanceTest::MDBCI_TEMPLATES}/machines.json.erb",
                                mdbci_template.to_s, config.internal_binding)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
@@ -95,6 +91,18 @@ class Application
     raise 'Could not create MDBCI configuration' unless result[:value].success?
     @log.info('Creating VMs with MDBCI')
     run_command_and_log("#{config.mdbci_tool} up #{@mdbci_config}")
+  end
+
+  def generate_template(config)
+    @log.info('Creating VMs using MDBCI')
+    current_time = Time.now.strftime('%Y%m%d-%H%M%S')
+    unless Dir.exist?(config.mdbci_vm_path)
+      FileUtils.mkdir_p(config.mdbci_vm_path)
+    end
+    @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
+    mdbci_template = "#{@mdbci_config}.json"
+    @log.info("Creating MDBCI configuration template #{mdbci_template}")
+    mdbci_template
   end
 
   # Destroy MDBCI virtual machines
