@@ -9,5 +9,6 @@ gem 'net-ssh', '~> 4.2'
 
 group :development do
   gem 'pry'
+  gem 'rake'
   gem 'rubocop'
 end
