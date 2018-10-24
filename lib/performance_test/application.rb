@@ -83,7 +83,7 @@ class Application
   # @param config [Configuration] configuration to use during creation.
   # @return name of the configuration that is being used.
   def setup_vm(config)
-    mdbci_template = generate_template(config)
+    mdbci_template = generate_mdbci_template(config)
     TemplateGenerator.generate("#{PerformanceTest::MDBCI_TEMPLATES}/machines.json.erb",
                                mdbci_template.to_s, config.internal_binding)
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
@@ -93,7 +93,7 @@ class Application
     run_command_and_log("#{config.mdbci_tool} up #{@mdbci_config}")
   end
 
-  def generate_template(config)
+  def generate_mdbci_template(config)
     @log.info('Creating VMs using MDBCI')
     current_time = Time.now.strftime('%Y%m%d-%H%M%S')
     unless Dir.exist?(config.mdbci_vm_path)
@@ -155,17 +155,27 @@ class Application
   # @param machine_config [MachineConfig] configuation of machines to use
   def configure_maxscale_server(machine, configurator, config, machine_config)
     @log.info('Configuring MaxScale server')
-    output_dir = "#{Dir.pwd}/performance-test-maxscale-config"
-    Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
-    maxscale_config = "#{output_dir}/maxscale.cnf"
-    TemplateGenerator.generate(config.maxscale_config, maxscale_config, machine_config.environment_binding)
+    maxscale_config = generate_file(config.maxscale_config, 'maxscale.cnf', machine_config.environment_binding)
+    @log.info("MaxScale configuration: #{maxscale_config}")
     configurator.within_ssh_session(machine) do |connection|
       configurator.sudo_exec(connection, '', 'service maxscale stop')
       configurator.upload_file(connection, maxscale_config, '/tmp/maxscale.cnf')
       configurator.sudo_exec(connection, '', 'cp /tmp/maxscale.cnf /etc/maxscale.cnf')
       configurator.sudo_exec(connection, '', 'service maxscale start')
     end
-    @log.info("MaxScale configuration: #{maxscale_config}")
+  end
+
+  # Generate file based on the template and environment binding
+  # @param template [String] path to the template to use
+  # @param file_name [String] name of the resulting file to create
+  # @param environment [Binding] environment to use during the file creation
+  # @return [String] path to the generated file
+  def generate_file(template, file_name, environment)
+    output_dir = "#{Dir.pwd}/performance-test/"
+    Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
+    result_file = "#{output_dir}/#{file_name}"
+    TemplateGenerator.generate(template, result_file, environment)
+    result_file
   end
 
   # Create test database on the maxscale server and test that everything works
@@ -246,26 +256,11 @@ class Application
       @log.info("Running the remote test '#{configuration.remote_test_app}")
       configurator = MachineConfigurator.new(@log)
       configurator.within_ssh_session(machine_config.configs['maxscale']) do |connection|
-        environment_file = save_environment
-        configurator.upload_file(connection, environment_file, '/tmp/env-test')
-        FileUtils.rm_f(environment_file)
-        configurator.upload_file(connection, configuration.remote_test_app, '/tmp/test')
+        test_app = generate_file(configuration.remote_test_app, 'test-app', machine_config.environment_binding)
+        configurator.upload_file(connection, test_app, '/tmp/test')
         configurator.ssh_exec(connection, 'chmod +x /tmp/test')
-        configurator.ssh_exec(connection, 'source /tmp/env-test && /tmp/test')
+        configurator.ssh_exec(connection, '/tmp/test')
       end
     end
-  end
-
-  # Save current environment into the file for use in external environment
-  # @return [String] path to the created environment file
-  def save_environment
-    file = Tempfile.new
-    ENV.each_pair do |key, value|
-      file.puts(": ${#{key}=#{value}}")
-      file.puts("export #{key}")
-    end
-    path = file.path
-    file.close
-    path
   end
 end
