@@ -8,7 +8,7 @@ end
 
 desc 'Run the sample performance test using MDBCI VMs'
 task :run do
-  ENV['maxscale_threads'] = 8
+  ENV['maxscale_threads'] = '8'
   sh <<-COMMAND
     ./bin/performance_test -v --remote-test-app tests/run_sysbench.sh \
     --db-server-2-config slave-config.sql.erb --db-server-3-config slave-config.sql.erb \
