@@ -3,7 +3,7 @@
 require 'rubocop/rake_task'
 
 RuboCop::RakeTask.new(:rubocop) do |task|
-  task.patterns = %w[bin/** Gemfile lib/**/.rb Rakefile]
+  task.patterns = %w[bin/** Gemfile lib/**/*.rb Rakefile]
 end
 
 desc 'Run the sample performance test using MDBCI VMs'
