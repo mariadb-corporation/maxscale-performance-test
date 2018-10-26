@@ -10,6 +10,7 @@ class Configuration
                 :mdbci_path, :mdbci_vm_path, :verbose, :server_config,
                 :keep_servers, :local_test_app, :already_configured,
                 :remote_test_app
+  attr_reader :extra_arguments
   # @param logger [Logger] application logger to use
   def initialize(logger)
     @backend_box = 'ubuntu_xenial_libvirt'
@@ -28,6 +29,7 @@ class Configuration
     @remote_test_app = ''
     @already_configured = false
     @logger = logger
+    @extra_arguments = {}
   end
 
   def to_s
@@ -191,5 +193,17 @@ class Configuration
     return true if File.exist?(file_name)
     @logger.error("#{description} file '#{file_name}' not found")
     false
+  end
+
+  ARGUMENT_PATTERN = /^(.*)=(.*)$/
+  # Parse the extra arguments that are passed to the application
+  def parse_extra_arguments(arguments)
+    arguments.each do |argument|
+      unless argument ARGUMENT_PATTERN.match?(argument)
+        raise "Passed extra argument '#{argument}' does not conform with the a=b pattern."
+      end
+      parts = ARGUMENT_PATTERN.match(argument)
+      @extra_arguments[parts[0]] = parts[1]
+    end
   end
 end

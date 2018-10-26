@@ -5,33 +5,36 @@ require 'ostruct'
 
 # Class provides access to the configuration of machines
 class MachineConfig
-  attr_reader :configs
+  attr_reader :configs, :environment_hash
 
-  # @param config [String] path to the configuration file in ini format
-  def initialize(config)
-    document = IniParse.parse(File.read(config))
+  # @param configuration_file [String] path to the configuration file in ini format
+  # @param extra_parameters [Hash] list of extra parameters that should be passed to generated files
+  def initialize(configuration_file, extra_parameters)
+    document = IniParse.parse(File.read(configuration_file))
     @configs = parse_document(document)
+    @extra_parameters = extra_parameters
+    @environment_hash = create_environment_hash
   end
 
-  # Provide configuration in the form of the configuration hash
-  def environment_hash
-    @configs.each_with_object({}) do |(name, config), result|
-      config.each_pair do |key, value|
-        result["#{name}_#{key}"] = value
-      end
-    end
-  end
-
-  # Provide configureation in the form of the biding
+  # Provide configuration in the form of the biding
   def environment_binding
     result = binding
-    environment_hash.merge(ENV).each_pair do |key, value|
+    @environment_hash.merge(ENV).merge(@extra_parameters).each_pair do |key, value|
       result.local_variable_set(key.downcase.to_sym, value)
     end
     result
   end
 
   private
+
+  # Provide configuration in the form of the configuration hash
+  def create_environment_hash
+    @configs.each_with_object({}) do |(name, config), result|
+      config.each_pair do |key, value|
+        result["#{name}_#{key}"] = value
+      end
+    end
+  end
 
   # Parse INI document into a set of machine descriptions
   def parse_document(document)
