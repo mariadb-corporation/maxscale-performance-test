@@ -48,6 +48,7 @@ class Configuration
     Local test application: #{@local_test_app}
     Remote test application: #{@remote_test_app}
     Already configured: #{@already_configured}
+    Extra arguments: \n#{@extra_arguments.map { |key, value| "- #{key}: #{value}" }.join("\n")}
     DOC
   end
 
@@ -136,7 +137,8 @@ class Configuration
         exit 1
       end
     end
-    parser.parse(ARGV)
+    extra_arguments = parser.parse(ARGV)
+    configuration.parse_extra_arguments(extra_arguments)
     logger.info("Using configuration:\n#{configuration}")
     configuration
   end
@@ -186,6 +188,18 @@ class Configuration
     @server_config.empty?
   end
 
+  ARGUMENT_PATTERN = /^(.*)=(.*)$/
+  # Parse the extra arguments that are passed to the application
+  def parse_extra_arguments(arguments)
+    arguments.each do |argument|
+      unless ARGUMENT_PATTERN =~ argument
+        raise "Passed extra argument '#{argument}' does not conform with the a=b pattern."
+      end
+      parts = ARGUMENT_PATTERN.match(argument)
+      @extra_arguments[parts[1]] = parts[2]
+    end
+  end
+
   private
 
   # Check that file exists, if not, display error message
@@ -193,17 +207,5 @@ class Configuration
     return true if File.exist?(file_name)
     @logger.error("#{description} file '#{file_name}' not found")
     false
-  end
-
-  ARGUMENT_PATTERN = /^(.*)=(.*)$/
-  # Parse the extra arguments that are passed to the application
-  def parse_extra_arguments(arguments)
-    arguments.each do |argument|
-      unless argument ARGUMENT_PATTERN.match?(argument)
-        raise "Passed extra argument '#{argument}' does not conform with the a=b pattern."
-      end
-      parts = ARGUMENT_PATTERN.match(argument)
-      @extra_arguments[parts[0]] = parts[1]
-    end
   end
 end

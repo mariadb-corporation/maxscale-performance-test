@@ -37,6 +37,7 @@ class Application
         else
           config_path = config.server_config
         end
+        machine_config = MachineConfig.new(config_path, config.extra_arguments)
         machine_config = MachineConfig.new(config_path)
         configure_machines(machine_config, config) unless config.already_configured
         run_test(config, machine_config)
@@ -45,7 +46,6 @@ class Application
         @log.error(error.message)
         @log.error(error.backtrace.join("\n"))
       end
-      destroy_vm(config) if config.create_vms? && !config.keep_servers
     end
   end
   # rubocop:enable Metrics/MethodLength
