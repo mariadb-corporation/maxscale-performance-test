@@ -171,7 +171,7 @@ class Application
   # @param environment [Binding] environment to use during the file creation
   # @return [String] path to the generated file
   def generate_file(template, file_name, environment)
-    output_dir = "#{Dir.pwd}/performance-test/"
+    output_dir = File.join(PerformanceTest::WORKING_DIRECTORY, 'performance-test')
     Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
     result_file = "#{output_dir}/#{file_name}"
     TemplateGenerator.generate(template, result_file, environment)

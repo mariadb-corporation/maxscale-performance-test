@@ -152,7 +152,8 @@ class Configuration
   def self.file_reference(file_name)
     expanded_path = File.expand_path(file_name)
     return file_name if file_name == expanded_path
-    dirs = [PerformanceTest::BASE_DIRECTORY, ENV['OLD_CWD']]
+
+    dirs = [PerformanceTest::BASE_DIRECTORY, PerformanceTest::WORKING_DIRECTORY]
     dirs.each do |directory|
       file_path = File.expand_path(file_name, directory)
       return file_path if File.exist?(file_path)
