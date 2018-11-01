@@ -7,7 +7,7 @@ require 'net/scp'
 # Class allows to configure a specified machine using the chef-solo,
 # MDBCI coockbooks and roles.
 class MachineConfigurator
-  def initialize(logger, root_path = File.expand_path('../../../chef-repository', __FILE__))
+  def initialize(logger, root_path = File.expand_path('../../chef-repository', __dir__))
     @log = logger
     @root_path = root_path
   end
@@ -52,7 +52,7 @@ class MachineConfigurator
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-            .select { |line| line.encode!('UTF-8', :undef => :replace, :invalid => :replace, :replace => "") =~ /\p{Graph}+$/ }
+            .select { |line| line.encode!('UTF-8', undef: :replace, invalid: :replace, replace: '') =~ /\p{Graph}+$/ }
             .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end
@@ -78,7 +78,7 @@ class MachineConfigurator
     connection.open_channel do |channel, _success|
       channel.on_data do |_, data|
         data.split("\n").map(&:chomp)
-            .select { |line| line.encode!('UTF-8', :undef => :replace, :invalid => :replace, :replace => "") =~ /\p{Graph}+/ }
+            .select { |line| line.encode!('UTF-8', undef: :replace, invalid: :replace, replace: '') =~ /\p{Graph}+/ }
             .each { |line| @log.debug("ssh: #{line}") }
         output += "#{data}\n"
       end

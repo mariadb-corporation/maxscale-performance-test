@@ -89,6 +89,7 @@ class Application
     @log.info("Generating MDBCI configuration #{@mdbci_config}")
     result = run_command_and_log("#{config.mdbci_tool} generate --template #{mdbci_template} #{@mdbci_config}")
     raise 'Could not create MDBCI configuration' unless result[:value].success?
+
     @log.info('Creating VMs with MDBCI')
     run_command_and_log("#{config.mdbci_tool} up #{@mdbci_config}")
   end
@@ -96,9 +97,7 @@ class Application
   def generate_mdbci_template(config)
     @log.info('Creating VMs using MDBCI')
     current_time = Time.now.strftime('%Y%m%d-%H%M%S')
-    unless Dir.exist?(config.mdbci_vm_path)
-      FileUtils.mkdir_p(config.mdbci_vm_path)
-    end
+    FileUtils.mkdir_p(config.mdbci_vm_path) unless Dir.exist?(config.mdbci_vm_path)
     @mdbci_config = "#{config.mdbci_vm_path}/#{current_time}-performance-test"
     mdbci_template = "#{@mdbci_config}.json"
     @log.info("Creating MDBCI configuration template #{mdbci_template}")
@@ -178,14 +177,29 @@ class Application
     result_file
   end
 
-  # Create test database on the maxscale server and test that everything works
+  # Create test database on the MaxScale server and test that everything works
   # as expected
-  # @param server [String] address of the server to connect to
-  def create_test_database(server)
+  # @param server_address [String] address of the server to connect to
+  def create_test_database(server_address)
     @log.info('Creating test database on the server')
+    client = create_database_connection(server_address)
+    begin
+      client.query('drop database test')
+    rescue Mysql2::Error => error
+      @log.error('Unable to drop database test.')
+      @log.error("Caugt error #{error.class}. With message:")
+      @log.error(error.message)
+    end
+    client.query('create database test')
+  end
+
+  # Create connection to the database server configured with the proper account
+  # @param server_address [String] address of the server to connect to
+  # rubocop:disable Metrics/MethodLength
+  def create_database_connection(server_address)
     attempt = 0
     begin
-      client = Mysql2::Client.new(host: server, port: 4006, username: 'skysql', password: 'skysql')
+      client = Mysql2::Client.new(host: server_address, port: 4006, username: 'skysql', password: 'skysql')
     rescue Mysql2::Error => error
       @log.error('Unable to connect to MaxScale.')
       @log.error(error.message)
@@ -199,15 +213,9 @@ class Application
         raise
       end
     end
-    begin
-      client.query('drop database test')
-    rescue Mysql2::Error => error
-      @log.error('Unable to drop database test.')
-      @log.error("Caugt error #{error.class}. With message:")
-      @log.error(error.message)
-    end
-    client.query('create database test')
+    client
   end
+  # rubocop:enable Metrics/MethodLength
 
   # Configure machine as mariadb using passed parameters.
   # @param machine [Hash] parameters of machine to connect to.
@@ -217,9 +225,11 @@ class Application
     @log.info('Configuring mariadb backend machine')
     repo_file = "#{Dir.home}/.config/mdbci/repo.d/mariadb/ubuntu/#{config.mariadb_version}.json"
     raise "Unable to find MariaDB configuration in '#{repo_file}'." unless File.exist?(repo_file)
+
     ubuntu_release = configurator.run_command(machine, 'lsb_release -c | cut -f2').strip
     mariadb_config = JSON.parse(File.read(repo_file)).find { |mariadb| mariadb['platform_version'] == ubuntu_release }
     raise "There was no configuration for '#{ubuntu_release}' in #{repo_file}" if mariadb_config.nil?
+
     mariadb_repository = mariadb_config['repo']
     Dir.mktmpdir('performance-test') do |dir|
       mariadb_role = "#{dir}/mariadb-host.json"
@@ -234,11 +244,12 @@ class Application
     @log.info('Configuring MariaDB servers according to configuration')
     config.mariadb_init_scripts.each_with_index do |script_path, index|
       next if script_path.empty?
+
       @log.info("Configuring #{index + 1} MariaDB server using #{script_path}")
       script = TemplateGenerator.generate_string(script_path, machine_config.environment_binding)
       @log.debug("Using the script:\n#{script}")
       client = Mysql2::Client.new(host: machine['network'], port: 3301 + index, username: 'skysql', password: 'skysql')
-      statements = script.gsub(/\n/, '').split(';').map(&:strip).delete_if(&:empty?)
+      statements = script.delete("\n").split(';').map(&:strip).delete_if(&:empty?)
       statements.each { |statement| client.query(statement) }
     end
   end

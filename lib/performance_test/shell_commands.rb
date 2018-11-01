@@ -3,23 +3,25 @@
 # This is the mixin that executes commands on the shell, logs it.
 # Mixin depends on log attribute that points to the logger.
 module ShellCommands
-  PREFIX = 'OLD_ENV_'.freeze
+  PREFIX = 'OLD_ENV_'
 
-  @@env = if ENV['APPIMAGE'] != 'true'
-            ENV
-          else
-            {}
-          end
+  @env = if ENV['APPIMAGE'] != 'true'
+           ENV
+         else
+           {}
+         end
 
   # Get the environment for external service to run in
   def self.environment
-    return @@env unless @@env.empty?
+    return @env unless @env.empty?
+
     ENV.each_pair do |key, value|
       next unless key.include?(PREFIX)
+
       correct_key = key.sub(/^#{PREFIX}/, '')
-      @@env[correct_key] = value
+      @env[correct_key] = value
     end
-    @@env
+    @env
   end
 
   # Execute the command, log stdout and stderr
@@ -50,6 +52,7 @@ module ShellCommands
         end
         alive_streams = wait_streams.reject(&:nil?)
         break if alive_streams.empty?
+
         result = IO.select(alive_streams, nil, nil, 300)
         if result.nil? && show_notifications
           log.error('The running command was inactive for 5 minutes.')
@@ -72,7 +75,7 @@ module ShellCommands
   # @param directory [String] path to the directory to run the command
   # return [Process::Status] of the run command
   def run_command_in_dir(command, directory)
-    run_command_and_log(command, false, { chdir: directory })
+    run_command_and_log(command, false, chdir: directory)
   end
 
   # Execute the command, log stdout and stderr. If command was not
@@ -94,7 +97,7 @@ module ShellCommands
   # @param dir [String] directory to run command in
   # @param message [String] message to display in case of failure
   def check_command_in_dir(command, directory, message)
-    check_command(command, message, { chdir: directory })
+    check_command(command, message, chdir: directory)
   end
 
   private
@@ -106,18 +109,16 @@ module ShellCommands
   # @return [IO] stream or nil if stream has ended. Returning nil is crucial
   # as we do not have any other information on when stream has ended.
   def read_stream(stream)
-    begin
-      buf = ''
-      loop do
-        buf += stream.read_nonblock(10000)
-      end
-    rescue IO::WaitReadable
-      buf.each_line do |line|
-        yield line unless line.chomp.empty?
-      end
-      return stream
-    rescue EOFError
-      return nil
+    buf = ''
+    loop do
+      buf += stream.read_nonblock(10_000)
     end
+  rescue IO::WaitReadable
+    buf.each_line do |line|
+      yield line unless line.chomp.empty?
+    end
+    stream
+  rescue EOFError
+    nil
   end
 end

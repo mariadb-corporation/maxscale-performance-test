@@ -12,6 +12,7 @@ class Configuration
                 :remote_test_app
   attr_reader :extra_arguments
   # @param logger [Logger] application logger to use
+  # rubocop:disable Metrics/MethodLength
   def initialize(logger)
     @backend_box = 'ubuntu_xenial_libvirt'
     @memory_size = 2048
@@ -31,6 +32,7 @@ class Configuration
     @logger = logger
     @extra_arguments = {}
   end
+  # rubocop:enable Metrics/MethodLength
 
   def to_s
     <<-DOC
@@ -176,11 +178,11 @@ class Configuration
     correct &&= check_file(@maxscale_config, 'MaxScale configuration')
     @mariadb_init_scripts.each_with_index do |script, index|
       next if script.empty?
+
       correct &&= check_file(script, "Maria DB #{index + 1} configuration")
     end
-    correct &&= check_file(@local_test_app, 'Local testing application') ||
-                check_file(@remote_test_app, 'Remote testing application')
-    correct
+    correct && check_file(@local_test_app, 'Local testing application') ||
+      check_file(@remote_test_app, 'Remote testing application')
   end
 
   # Specify whether it is needed to create a virtual machines with MDBCI
@@ -196,6 +198,7 @@ class Configuration
       unless ARGUMENT_PATTERN =~ argument
         raise "Passed extra argument '#{argument}' does not conform with the a=b pattern."
       end
+
       parts = ARGUMENT_PATTERN.match(argument)
       @extra_arguments[parts[1]] = parts[2]
     end
@@ -206,6 +209,7 @@ class Configuration
   # Check that file exists, if not, display error message
   def check_file(file_name, description)
     return true if File.exist?(file_name)
+
     @logger.error("#{description} file '#{file_name}' not found")
     false
   end

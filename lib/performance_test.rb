@@ -12,7 +12,7 @@ module PerformanceTest
   require_relative 'performance_test/machine_config'
   require_relative 'performance_test/shell_commands'
 
-  BASE_DIRECTORY = File.expand_path('../../', __FILE__).freeze
+  BASE_DIRECTORY = File.expand_path('..', __dir__).freeze
   TEMPLATES_DIRECTORY = File.expand_path('templates', BASE_DIRECTORY).freeze
   DB_TEMPLATES = File.expand_path('db-config', TEMPLATES_DIRECTORY).freeze
   MAXSCALE_TEMPLATES = File.expand_path('maxscale-config', TEMPLATES_DIRECTORY).freeze
