@@ -23,6 +23,11 @@ execute 'Reload systemd configuration' do
   command 'systemctl daemon-reload'
 end
 
+execute 'Kill all mysqld processes remaining on the system' do
+  ignore_failure true
+  command 'killall -s kill mysqld'
+end
+
 directories = %w(/usr/share/mysql /usr/lib/mysql /usr/lib64/mysql /var/lib/mysql /var/log/mysql)
 directories.each do |directory_name|
   directory directory_name do
