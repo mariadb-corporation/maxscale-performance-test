@@ -6,7 +6,7 @@
 log-bin           = mar-bin
 binlog-format     = row
 slave-skip-errors = all
-server_id         = <%= server %>
+server-id         = <%= server %>
 user              = mysql
 pid-file          = /var/run/mysqld/mysqld<%= server %>.pid
 socket            = /var/run/mysqld/mysqld<%= server %>.sock
