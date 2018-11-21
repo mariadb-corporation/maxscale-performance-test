@@ -65,7 +65,6 @@ class Application
         yield
       ensure
         f.flock(File::LOCK_UN)
-        File.delete(lock_file) if File.exist?(lock_file)
       end
     end
   end
