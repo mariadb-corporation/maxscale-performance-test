@@ -28,9 +28,7 @@ class Application
   # Starts the execution of the system test
   # rubocop:disable Metrics/MethodLength
   def run
-    lock_file_dir = "#{ENV["HOME"]}/maxscale-performance-test"
-    Dir.mkdir(lock_file_dir) if !Dir.exist?(lock_file_dir)
-    lock_file = "#{lock_file_dir}/#{File.basename($PROGRAM_NAME)}_lock"
+    lock_file = "/var/lock/#{File.basename($PROGRAM_NAME)}_lock"
     File.open(lock_file, "w") do |f|
       begin
         @log.info('Taking ownership of the lock file...')
