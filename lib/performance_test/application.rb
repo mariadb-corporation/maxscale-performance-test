@@ -28,28 +28,46 @@ class Application
   # Starts the execution of the system test
   # rubocop:disable Metrics/MethodLength
   def run
-    @log.info('Starting the system test')
-    config = read_configuration
-    begin
-      if config.create_vms?
-        setup_vm(config)
-        config_path = "#{@mdbci_config}_network_config"
-      else
-        config_path = config.server_config
+    run_with_exclusive_lock(File.basename($PROGRAM_NAME)) do
+      config = read_configuration
+      begin
+        if config.create_vms?
+          setup_vm(config)
+          config_path = "#{@mdbci_config}_network_config"
+        else
+          config_path = config.server_config
+        end
+        machine_config = MachineConfig.new(config_path)
+        configure_machines(machine_config, config) unless config.already_configured
+        run_test(config, machine_config)
+      rescue StandardError => error
+        @log.error("Caught error: #{error.class}")
+        @log.error(error.message)
+        @log.error(error.backtrace.join("\n"))
       end
-      machine_config = MachineConfig.new(config_path)
-      configure_machines(machine_config, config) unless config.already_configured
-      run_test(config, machine_config)
-    rescue StandardError => error
-      @log.error("Caught error: #{error.class}")
-      @log.error(error.message)
-      @log.error(error.backtrace.join("\n"))
+      destroy_vm(config) if config.create_vms? && !config.keep_servers
     end
-    destroy_vm(config) if config.create_vms? && !config.keep_servers
   end
   # rubocop:enable Metrics/MethodLength
 
   private
+
+  # Runs signle instance of a process with unique name
+  #
+  # @param process_name [String] name of a running process to use in the lock file name
+  def run_with_exclusive_lock(process_name)
+    lock_file = "/var/lock/#{process_name}_lock"
+    File.open(lock_file, 'w') do |f|
+      begin
+        @log.info('Taking ownership of the lock file...')
+        f.flock(File::LOCK_EX)
+        @log.info('Starting the system test')
+        yield
+      ensure
+        f.flock(File::LOCK_UN)
+      end
+    end
+  end
 
   # Parse configuration parameters and configure logger
   # @return [Configuration] read configuration
