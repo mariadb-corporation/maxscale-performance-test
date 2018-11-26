@@ -13,6 +13,7 @@ recipe            'setup_multi_server', 'Removes current version and makes fresh
 
 depends           'ntp'
 depends           'packages'
+depends           'iptables-ng'
 
 supports          'redhat'
 supports          'centos'

@@ -10,14 +10,16 @@ DEPENDENCIES
   selinux
 
 GRAPH
-  apt (6.1.4)
+  apt (7.1.1)
   freebsd (1.0.2)
   ips (0.1.0)
   ips-omniti (0.0.2)
     ips (>= 0.0.0)
+  iptables-ng (4.0.0)
   mariadb (0.0.3)
+    iptables-ng (>= 0.0.0)
     ntp (>= 0.0.0)
     packages (>= 0.0.0)
-  ntp (3.5.6)
+  ntp (3.6.1)
   packages (0.1.1)
-  selinux (2.1.0)
+  selinux (2.1.1)
