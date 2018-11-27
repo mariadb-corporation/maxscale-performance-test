@@ -1,3 +1,4 @@
+include_recipe 'mariadb::configure_multi_firewall'
 include_recipe 'mariadb::install_community'
 
 # Create mysql directory that is destroyed during the purge
@@ -15,19 +16,6 @@ template '/etc/mysql/multiple_servers.cnf' do
   group 'root'
   mode '0644'
   action :create
-end
-
-# Open ports for these servers and save configuration
-1.upto(node['mariadb']['servers']) do |server|
-  port = 3300 + server
-  execute "Openning port #{port} for MultipleServers" do
-    command "iptables -I INPUT -p tcp -m tcp --dport #{port} -j ACCEPT"
-    command "iptables -I INPUT -p tcp --dport #{port} -j ACCEPT -m state --state NEW"
-  end
-end
-
-execute "Save MariaDB iptables rules for multiple servers" do
-  command "iptables-save > /etc/iptables/rules.v4"
 end
 
 # Create log and run directories

@@ -6,22 +6,16 @@
   "maintainer_email": "kirill.yudenok@gmail.com",
   "license": "All rights reserved",
   "platforms": {
+
   },
   "dependencies": {
-  },
-  "recommendations": {
-  },
-  "suggestions": {
-  },
-  "conflicting": {
+
   },
   "providing": {
-  },
-  "replacing": {
+
   },
   "attributes": {
-  },
-  "groupings": {
+
   },
   "recipes": {
     "install": "Installs all required packages",
