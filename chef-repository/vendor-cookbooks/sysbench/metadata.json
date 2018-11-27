@@ -6,24 +6,19 @@
   "maintainer_email": "you@example.com",
   "license": "All Rights Reserved",
   "platforms": {
+
   },
   "dependencies": {
-  },
-  "recommendations": {
-  },
-  "suggestions": {
-  },
-  "conflicting": {
+
   },
   "providing": {
-  },
-  "replacing": {
+
   },
   "attributes": {
-  },
-  "groupings": {
+
   },
   "recipes": {
+
   },
   "version": "0.1.0",
   "source_url": "",
