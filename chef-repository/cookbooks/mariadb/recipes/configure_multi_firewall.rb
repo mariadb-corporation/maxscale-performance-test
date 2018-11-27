@@ -29,7 +29,3 @@ end
 iptables_ng_rule 'allow-access-to-mariadb-incoming-ports' do
   rule mariadb_rules
 end
-
-iptables_ng_rule 'test' do
-  rule '--protocol udp --dport 5555 --jump ACCEPT'
-end
