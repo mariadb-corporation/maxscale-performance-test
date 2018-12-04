@@ -6,7 +6,7 @@ type=monitor
 module=mysqlmon
 servers=server1,server2,server3,server4
 user=skysql
-passwd=skysql
+passorwd=skysql
 monitor_interval=1000
 detect_stale_master=false
 detect_standalone_master=false
@@ -16,8 +16,8 @@ type=service
 router=readwritesplit
 servers=server1,server2,server3,server4
 user=maxskysql
-passwd=skysql
-router_options=slave_selection_criteria=LEAST_GLOBAL_CONNECTIONS
+password=skysql
+slave_selection_criteria=LEAST_GLOBAL_CONNECTIONS
 max_slave_connections=1
 
 [RW Split Listener]
