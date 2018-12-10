@@ -1,0 +1,10 @@
+node_000_network=172.20.3.1
+node_000_keyfile=/home/vagrant/.ssh/id_rsa
+node_000_private_ip=172.20.3.1
+node_000_whoami=perf
+node_000_hostname=maxscale1
+maxscale_network=172.20.3.2
+maxscale_keyfile=/home/vagrant/.ssh/id_rsa
+maxscale_private_ip=172.20.3.2
+maxscale_whoami=perf
+maxscale_hostname=maxscale2
