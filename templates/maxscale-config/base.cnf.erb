@@ -6,7 +6,7 @@ type=monitor
 module=mysqlmon
 servers=server1,server2,server3,server4
 user=skysql
-passorwd=skysql
+password=skysql
 monitor_interval=1000
 #detect_stale_master=false
 #detect_standalone_master=false
@@ -25,6 +25,20 @@ type=listener
 service=RW Split Router
 protocol=MySQLClient
 port=4006
+
+[RC Router]
+type=service
+#router=readwritesplit
+router=readconnroute
+servers=server1,server2,server3,server4
+user=maxskysql
+password=skysql
+
+[RC Listener]
+type=listener
+service=RW Split Router
+protocol=MySQLClient
+port=4008
 
 [CLI]
 type=service
