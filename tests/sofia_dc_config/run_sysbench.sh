@@ -20,7 +20,7 @@ WARMUP=1
 ENGINE=InnoDB
 TABLES=10
 TOTAL_ROWS=100000
-RUNTIME=121
+RUNTIME=${perf_runtime}
 REPORT=2
 EXTRATIME=0
 
@@ -54,5 +54,5 @@ sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-tabl
 #sysbench $WORKLOAD --threads=${sysbench_threads}  $CONNECTION prepare
 
 #echo taskset 0xf0 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 $CONNECTION run 
-taskset 0xf0 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 --mysql-host=127.0.0.1 --mysql-port=4006 --mysql-user=skysql --mysql-password=skysql run 
+taskset 0xf0 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 --mysql-host=127.0.0.1 --mysql-port=${perf_port} --mysql-user=skysql --mysql-password=skysql run 
 #sysbench $WORKLOAD --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 $CONNECTION run 
