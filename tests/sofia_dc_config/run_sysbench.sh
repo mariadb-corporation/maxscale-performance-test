@@ -53,6 +53,14 @@ sudo taskset -p 0x0f $maxscale_pid
 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads}  $CONNECTION prepare
 #sysbench $WORKLOAD --threads=${sysbench_threads}  $CONNECTION prepare
 
+if [ ${use_callgrind} == "yes" ] ; then
+    sudo service maxscale stop
+    sudo --user=maxscale valgrind -d --log-file=/var/log/maxscale/valgrind.log --trace-children=yes --tool=callgrind --callgrind-out-file=/var/log/maxscale/callgrind.log /usr/bin/maxscale
+fi
 #echo taskset 0xf0 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 $CONNECTION run 
 taskset 0xf0 sysbench $WORKLOAD --db-ps-mode=$PS_MODE --oltp_tables_count=$TABLES --oltp-table-size=$ROWS --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 --mysql-host=127.0.0.1 --mysql-port=${perf_port} --mysql-user=skysql --mysql-password=skysql run 
 #sysbench $WORKLOAD --threads=${sysbench_threads} --report-interval=$REPORT --max-time=$RUNTIME --max-requests=0 $CONNECTION run 
+if [ ${use_callgrind} == "yes" ] ; then
+    sudo kill $(pidof valgrind)
+fi
+
