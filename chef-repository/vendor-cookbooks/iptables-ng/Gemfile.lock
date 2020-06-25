@@ -167,7 +167,7 @@ GEM
     public_suffix (3.0.3)
     rack (2.2.3)
     rainbow (3.0.0)
-    rake (12.3.1)
+    rake (13.0.1)
     retryable (2.0.4)
     rspec (3.7.0)
       rspec-core (~> 3.7.0)
